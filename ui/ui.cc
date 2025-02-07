@@ -3,9 +3,27 @@
 #include "../imgui/imgui.h"
 #include "../imgui/imgui_internal.h"
 #include <thread>
+#include "../keyauth/utils.hpp"
+#include "../keyauth/skStr.h"
+#include "../keyauth/auth.hpp"
 
-std::string key_input = "";
+using namespace KeyAuth;
 
+std::string name = skCrypt("cs2").decrypt(); // App name
+std::string ownerid = skCrypt("oE4g8i1Vq4").decrypt(); // Account ID
+std::string secret = skCrypt("8fd8b7aade64ce87387132e9f56908a824d9ceeb525a1dbe97999767e4bf02ed").decrypt(); // Application secret (not used in latest C++ example)
+std::string version = skCrypt("1.0").decrypt(); // Application version. Used for automatic downloads see video here https://www.youtube.com/watch?v=kW195PLCBKs
+std::string url = skCrypt("https://keyauth.win/api/1.3/").decrypt(); // change if using KeyAuth custom domains feature
+std::string path = skCrypt("").decrypt(); // (OPTIONAL) see tutorial here https://www.youtube.com/watch?v=I9rxt821gMk&t=1s
+
+
+api KeyAuthApp(name, ownerid, version, url, path);
+
+
+
+std::string username, password, key, TfaCode;
+
+void sessionStatus();
 bool IsInternetConnected() {
     // its a ghetto method but idc tbh, also needs admin rights
     int result = system("ping -c 1 google.com");
@@ -46,7 +64,13 @@ int hello_world() {
 
 void ui::render() {
     if (!globals.active) return;
-
+    KeyAuthApp.init();
+    if (!KeyAuthApp.response.success)
+    {
+        //std::cout << skCrypt("\n Status: ") << KeyAuthApp.response.message;
+        Sleep(1500);
+        exit(1);
+    }
 #if _DEBUG
     globals.checked_connection = true;
     globals.connection_message = ("Connected");
@@ -93,20 +117,19 @@ void ui::render() {
             ImGui::SetCursorPos(ImVec2(60, 110));
             ImGui::InputText("", globals.key, IM_ARRAYSIZE(globals.key));
 
-            key_input = globals.key;
+            KeyAuthApp.license(key);  // Führt die Methode aus, aber speichert nichts in einer Variablen
+
+            
+            
+            //key_input = globals.key;
+            
 
             ImGui::SetCursorPos(ImVec2(60, 150));
             if (ImGui::Button("LOGIN", ImVec2(260, 20))) {
-                if (key_input == "key")
-                {
+                if (KeyAuthApp.response.success) {
+                    // Erfolgreiche Authentifizierung
                     globals.login_form = false;
                     globals.login_loading = true;
-                }
-                // just for example
-                else if (key_input == "hwid")
-                {
-                    globals.fail_message = "Invalid HWID. Please contact support.";
-                    globals.failed = true;
                 }
                 else
                 {
@@ -114,7 +137,9 @@ void ui::render() {
                     globals.failed = true;
                 }
             }
+           
         }
+
         else if (globals.login_loading && !globals.failed)
         {
             static float 
@@ -137,19 +162,27 @@ void ui::render() {
         }
         else if (globals.main_form && !globals.failed)
         {
+            /*
+           * Do NOT remove this checkAuthenticated() function.
+           * It protects you from cracking, it would be NOT be a good idea to remove it
+           */
+            std::thread run(checkAuthenticated, ownerid);
+            // do NOT remove checkAuthenticated(), it MUST stay for security reasons
+            std::thread check(sessionStatus); // do NOT remove this function either.
+
             auto p = ImGui::GetWindowPos();
             ImGuiContext& g = *GImGui;
             ImFont* font = g.Font;
             // Convert to std::string and concatenate
             
-            window_title = "https://discord.gg/96Xpa8XX4t | premium panel";
+            window_title = "https://discord.gg/96Xpa8XX4t | Merkur loader";
 
             //ImGui::SetCursorPos(ImVec2(10, 25));
             //ImGui::GetWindowDrawList()->AddRectFilled(ImVec2(p.x + 15, p.y + 35), ImVec2(p.x + 205, p.y + 180), ImColor(0, 0, 0, int(55)), 0);
             //ImGui::GetWindowDrawList()->AddRect(ImVec2(p.x + 15, p.y + 35), ImVec2(p.x + 205, p.y + 180), ImColor(97, 173, 255, int(25)), 0);
 
             // Products tab
-            const char* items[] = { "Hello World!", "product 2", "product 3", "product 4", "product 5" };
+            const char* items[] = { "cs2", "product 2", "product 3" };
             static int item_current = 0;
             ImGui::SetCursorPos(ImVec2(15, 30));
             ImGui::Text("Products");
@@ -187,6 +220,9 @@ void ui::render() {
             ImGui::Text("Status: ");
             int status_width = ImGui::CalcTextSize("Status: ").x;
             ImColor status_color;
+            ImColor(89, 255, 0, int(255));//green
+            ImColor(201, 204, 0, int(255));//yelllow
+            ImColor(200, 0, 0, int(255));//red
             // ofc u should initialize strings as globals.version / globals.last_uptade / globals.status in loading screen or somewhere else... this is a ghetto example
             if (item_current == 0)
             {
@@ -279,6 +315,23 @@ void ui::render() {
         }
     }
     ImGui::End();
+}
+
+void sessionStatus() {
+    KeyAuthApp.check(true); // do NOT specify true usually, it is slower and will get you blocked from API
+    if (!KeyAuthApp.response.success) {
+        exit(0);
+    }
+
+    if (KeyAuthApp.response.isPaid) {
+        while (true) {
+            Sleep(20000); // this MUST be included or else you get blocked from API
+            KeyAuthApp.check();
+            if (!KeyAuthApp.response.success) {
+                exit(0);
+            }
+        }
+    }
 }
 
 void ui::init(LPDIRECT3DDEVICE9 device) {
