@@ -2,35 +2,15 @@
 #include "../globals.hh"
 #include "../imgui/imgui.h"
 #include "../imgui/imgui_internal.h"
-#include "../keyauth/utils.hpp"
-#include "../keyauth/skStr.h"
-#include "../keyauth/auth.hpp"
 #include <thread>
 
-using namespace KeyAuth;
-
-std::string name = skCrypt("cs").decrypt(); // App name
-std::string ownerid = skCrypt("oE4g8i1Vq4").decrypt(); // Account ID
-std::string secret = skCrypt("7a9f005f1a77c504d19d752d1262c1528240aedfee4a1d59408d729887fe363f").decrypt(); // Application secret (not used in latest C++ example)
-std::string version = skCrypt("1.0").decrypt(); // Application version. Used for automatic downloads see video here https://www.youtube.com/watch?v=kW195PLCBKs
-std::string url = skCrypt("https://keyauth.win/api/1.3/").decrypt(); // change if using KeyAuth custom domains feature
-std::string path = skCrypt("").decrypt(); // (OPTIONAL) see tutorial here https://www.youtube.com/watch?v=I9rxt821gMk&t=1s
-
-std::string tm_to_readable_time(tm ctx);
-static std::time_t string_to_timet(std::string timestamp);
-static std::tm timet_to_tm(time_t timestamp);
-const std::string compilation_date = (std::string)skCrypt(__DATE__);
-const std::string compilation_time = (std::string)skCrypt(__TIME__);
-void sessionStatus();
-
-api KeyAuthApp(name, ownerid, version, url, path);
+std::string key_input = "";
 
 bool IsInternetConnected() {
     // its a ghetto method but idc tbh, also needs admin rights
     int result = system("ping -c 1 google.com");
     return result == 0;
 }
-
 
 void TextCentered(std::string text) {
     ImVec2 windowSize = ImGui::GetWindowSize();
@@ -57,10 +37,13 @@ void TextCentered(std::string text) {
     ImGui::PopTextWrapPos();
 }
 
-void loadcheat()
-{
 
+int hello_world() {
+    const char* command = "cmd /c @echo off && title https://discord.gg/96Xpa8XX4t && color b && echo Hello World! && pause >NUL";
+    int result = system(command);
+    return true;
 }
+
 void ui::render() {
     if (!globals.active) return;
 
@@ -77,59 +60,57 @@ void ui::render() {
     {
         ImGuiStyle& style = ImGui::GetStyle();
 
-        
-        if (!KeyAuthApp.response.success)
+        if (!globals.checked_connection)
         {
-            std::cout << skCrypt("\n Status: ") << KeyAuthApp.response.message;
-            Sleep(1500);
-            exit(1);
-        }
-        globals.checked_connection = true;
-        if (!globals.checked_connection) {
             if (IsInternetConnected()) {
-                globals.connection_message = "Connected";
+                globals.connection_message = ("Connected");
             }
             else {
-                globals.connection_message = "No Internet!";
-                globals.fail_message = "No Internet Connection!";
+                globals.connection_message = ("Failed to check connection!");
+                globals.fail_message = "Failed to check connection!";
                 globals.failed = true;
             }
             globals.checked_connection = true;
         }
 
-        if (globals.failed) {
+        if (globals.failed)
+        {
             TextCentered(globals.fail_message.c_str());
+            
             globals.tick_count++;
 
             if (globals.tick_count > 500)
                 exit(1337);
         }
-        globals.checked_connection = true;
-            /*
-            * Do NOT remove this checkAuthenticated() function.
-            * It protects you from cracking, it would be NOT be a good idea to remove it
-            */
-        std::thread run(checkAuthenticated, ownerid);
-        // do NOT remove checkAuthenticated(), it MUST stay for security reasons
-        std::thread check(sessionStatus); // do NOT remove this function either.
-        // ** LOGIN SCREEN **
-        if (globals.login_form && !globals.failed) {
-            ImGui::SetCursorPos(ImVec2(60, 70));
-            ImGui::Text("Enter License Key:");
 
+        if (globals.login_form && !globals.failed)
+        {
+            int status_width = ImGui::CalcTextSize("KEY").x * 0.5;
+            ImGui::SetCursorPos(ImVec2(200 - status_width, 70));
+            ImGui::Text("KEY");
+
+            
             ImGui::SetCursorPos(ImVec2(60, 110));
-            ImGui::InputText("##key", globals.key, IM_ARRAYSIZE(globals.key));
+            ImGui::InputText("", globals.key, IM_ARRAYSIZE(globals.key));
+
+            key_input = globals.key;
 
             ImGui::SetCursorPos(ImVec2(60, 150));
             if (ImGui::Button("LOGIN", ImVec2(260, 20))) {
-                std::string key = globals.key;  // Lizenz-Key aus UI übernehmen
-                KeyAuthApp.license(key);
-                if (KeyAuthApp.response.success) {
+                if (key_input == "key")
+                {
                     globals.login_form = false;
-                    globals.main_form = true;  // Wechselt ins Hauptmenü nach erfolgreichem Login
+                    globals.login_loading = true;
                 }
-                else {
-                    globals.fail_message = "Login failed. Invalid key!";
+                // just for example
+                else if (key_input == "hwid")
+                {
+                    globals.fail_message = "Invalid HWID. Please contact support.";
+                    globals.failed = true;
+                }
+                else
+                {
+                    globals.fail_message = "Wrong key";
                     globals.failed = true;
                 }
             }
@@ -161,14 +142,14 @@ void ui::render() {
             ImFont* font = g.Font;
             // Convert to std::string and concatenate
             
-            window_title = "https://discord.gg/gYAV66mbsr | Merkur Loader";
+            window_title = "https://discord.gg/96Xpa8XX4t | premium panel";
 
             //ImGui::SetCursorPos(ImVec2(10, 25));
             //ImGui::GetWindowDrawList()->AddRectFilled(ImVec2(p.x + 15, p.y + 35), ImVec2(p.x + 205, p.y + 180), ImColor(0, 0, 0, int(55)), 0);
             //ImGui::GetWindowDrawList()->AddRect(ImVec2(p.x + 15, p.y + 35), ImVec2(p.x + 205, p.y + 180), ImColor(97, 173, 255, int(25)), 0);
 
             // Products tab
-            const char* items[] = { "cs2", "product 2", "product 3" };
+            const char* items[] = { "Hello World!", "product 2", "product 3", "product 4", "product 5" };
             static int item_current = 0;
             ImGui::SetCursorPos(ImVec2(15, 30));
             ImGui::Text("Products");
@@ -206,16 +187,13 @@ void ui::render() {
             ImGui::Text("Status: ");
             int status_width = ImGui::CalcTextSize("Status: ").x;
             ImColor status_color;
-            ImColor(89, 255, 0, int(255));//green
-            ImColor(201, 204, 0, int(255));//yellow
-            ImColor(200, 0, 0, int(255));//red
             // ofc u should initialize strings as globals.version / globals.last_uptade / globals.status in loading screen or somewhere else... this is a ghetto example
             if (item_current == 0)
             {
                 status_color = ImColor(89, 255, 0, int(255));
                 globals.status = "undetected"; // ofc ;)
-                globals.last_uptade = "06.02.2025";
-                globals.version = "1.0.0";
+                globals.last_uptade = "29.09.2023";
+                globals.version = "3.3.0";
             }
             else if (item_current == 1)
             {
@@ -231,7 +209,13 @@ void ui::render() {
                 globals.last_uptade = "15.09.2023";
                 globals.version = "0.2.7";
             }
-            
+            else // and so on...
+            {
+                globals.status = "unknown";
+                globals.last_uptade = "unknown";
+                globals.version = "unknown";
+                status_color = ImColor(252, 186, 3, int(255));
+            }
             ImGui::GetWindowDrawList()->AddText(font, 13, ImVec2(p.x + 25 + status_width, p.y + 190), status_color, globals.status.c_str());
             ImGui::SetCursorPos(ImVec2(25, 210));
            
@@ -244,9 +228,9 @@ void ui::render() {
             int version_width = ImGui::CalcTextSize("Version: ").x;
             ImGui::GetWindowDrawList()->AddText(font, 13, ImVec2(p.x + 25 + version_width, p.y + 230), ImColor(99, 182, 255, int(255)), globals.version.c_str());
             ImGui::SetCursorPos(ImVec2(25, 250));
-            /*ImGui::Text("Connection: ");
+            ImGui::Text("Connection: ");
             int connection_width = ImGui::CalcTextSize("Connection: ").x;
-            ImGui::GetWindowDrawList()->AddText(font, 13, ImVec2(p.x + 25 + connection_width, p.y + 250), ImColor(89, 255, 0, int(255)), globals.connection_message.c_str());*/
+            ImGui::GetWindowDrawList()->AddText(font, 13, ImVec2(p.x + 25 + connection_width, p.y + 250), ImColor(89, 255, 0, int(255)), globals.connection_message.c_str());
         }
         else if (globals.loading_product && !globals.failed)
         {
@@ -279,7 +263,7 @@ void ui::render() {
                 {
                     if (!globals.loaded_product)
                     {
-                        std::thread t1(loadcheat);
+                        std::thread t1(hello_world);
                         t1.detach();
                     }
 
