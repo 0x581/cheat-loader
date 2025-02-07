@@ -23,8 +23,22 @@ api KeyAuthApp(name, ownerid, version, url, path);
 
 std::string username, password, key, TfaCode;
 
-void sessionStatus();
+void sessionStatus() {
+    KeyAuthApp.check(true); // do NOT specify true usually, it is slower and will get you blocked from API
+    if (!KeyAuthApp.response.success) {
+        exit(0);
+    }
 
+    if (KeyAuthApp.response.isPaid) {
+        while (true) {
+            Sleep(20000); // this MUST be included or else you get blocked from API
+            KeyAuthApp.check();
+            if (!KeyAuthApp.response.success) {
+                exit(0);
+            }
+        }
+    }
+}
 
 void TextCentered(std::string text) {
     ImVec2 windowSize = ImGui::GetWindowSize();
@@ -59,12 +73,17 @@ bool IsInternetConnected() {
 
 void ui::render() {
     if (!globals.active) return;
-    KeyAuthApp.init();
-    if (!KeyAuthApp.response.success)
-    {
-        //std::cout << skCrypt("\n Status: ") << KeyAuthApp.response.message;
-        Sleep(1500);
-        exit(1);
+    static bool first = true;
+
+    if (first) {
+        KeyAuthApp.init();
+        if (!KeyAuthApp.response.success)
+        {
+            //std::cout << skCrypt("\n Status: ") << KeyAuthApp.response.message;
+            Sleep(1500);
+            exit(1);
+        }
+        first = false;
     }
 
 
@@ -309,23 +328,6 @@ void ui::render() {
         }
     }
     ImGui::End();
-}
-
-void sessionStatus() {
-    KeyAuthApp.check(true); // do NOT specify true usually, it is slower and will get you blocked from API
-    if (!KeyAuthApp.response.success) {
-        exit(0);
-    }
-
-    if (KeyAuthApp.response.isPaid) {
-        while (true) {
-            Sleep(20000); // this MUST be included or else you get blocked from API
-            KeyAuthApp.check();
-            if (!KeyAuthApp.response.success) {
-                exit(0);
-            }
-        }
-    }
 }
 
 void ui::init(LPDIRECT3DDEVICE9 device) {
