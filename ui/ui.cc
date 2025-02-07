@@ -24,11 +24,7 @@ api KeyAuthApp(name, ownerid, version, url, path);
 std::string username, password, key, TfaCode;
 
 void sessionStatus();
-bool IsInternetConnected() {
-    // its a ghetto method but idc tbh, also needs admin rights
-    int result = system("ping -c 1 google.com");
-    return result == 0;
-}
+
 
 void TextCentered(std::string text) {
     ImVec2 windowSize = ImGui::GetWindowSize();
@@ -55,11 +51,10 @@ void TextCentered(std::string text) {
     ImGui::PopTextWrapPos();
 }
 
-
-int hello_world() {
-    const char* command = "cmd /c @echo off && title https://discord.gg/96Xpa8XX4t && color b && echo Hello World! && pause >NUL";
-    int result = system(command);
-    return true;
+bool IsInternetConnected() {
+    // its a ghetto method but idc tbh, also needs admin rights
+    int result = system("ping -c 1 google.com");
+    return result == 0;
 }
 
 void ui::render() {
@@ -71,10 +66,7 @@ void ui::render() {
         Sleep(1500);
         exit(1);
     }
-#if _DEBUG
-    globals.checked_connection = true;
-    globals.connection_message = ("Connected");
-#endif
+
 
     ImGui::SetNextWindowPos(ImVec2(window_pos.x, window_pos.y), ImGuiCond_Once);
     ImGui::SetNextWindowSize(ImVec2(window_size.x, window_size.y));
@@ -100,12 +92,15 @@ void ui::render() {
         if (globals.failed)
         {
             TextCentered(globals.fail_message.c_str());
-            
+
             globals.tick_count++;
 
             if (globals.tick_count > 500)
                 exit(1337);
         }
+        
+
+        
 
         if (globals.login_form && !globals.failed)
         {
@@ -117,7 +112,7 @@ void ui::render() {
             ImGui::SetCursorPos(ImVec2(60, 110));
             ImGui::InputText("", globals.key, IM_ARRAYSIZE(globals.key));
 
-            KeyAuthApp.license(key);  // Führt die Methode aus, aber speichert nichts in einer Variablen
+            KeyAuthApp.license(globals.key);  // Führt die Methode aus, aber speichert nichts in einer Variablen
 
             
             
@@ -133,7 +128,7 @@ void ui::render() {
                 }
                 else
                 {
-                    globals.fail_message = "Wrong key";
+                    globals.fail_message = KeyAuthApp.response.message;
                     globals.failed = true;
                 }
             }
@@ -299,8 +294,6 @@ void ui::render() {
                 {
                     if (!globals.loaded_product)
                     {
-                        std::thread t1(hello_world);
-                        t1.detach();
                     }
 
                     globals.loaded_product = true;

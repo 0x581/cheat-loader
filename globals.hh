@@ -11,8 +11,8 @@ public:
 	bool main_form = false;
 	bool loading_product = false;
 	bool loaded_product = false;
-	bool failed = false;
 	bool checked_connection = true;
+	bool failed = false;
 	bool initialized_new_window_name = false;
 	bool loaded_successfull = false;
 	std::string fail_message = "";
