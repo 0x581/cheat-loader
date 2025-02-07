@@ -1,3 +1,4 @@
+
 #include <Windows.h>
 #include <iostream>
 #include <vector>
@@ -15,8 +16,13 @@ namespace KeyAuth {
 	public:
 
 		std::string name, ownerid, version, url, path;
+		static bool debug;
 
-		api(std::string name, std::string ownerid, std::string version, std::string url, std::string path) : name(name), ownerid(ownerid), version(version), url(url), path(path) {}
+		api(std::string name, std::string ownerid, std::string version, std::string url, std::string path, bool debugParameter = false)
+			: name(name), ownerid(ownerid), version(version), url(url), path(path)
+		{
+			setDebug(debugParameter);
+		}
 
 		void ban(std::string reason = "");
 		void init();
@@ -28,6 +34,7 @@ namespace KeyAuth {
 		void setvar(std::string var, std::string vardata);
 		std::string getvar(std::string var);
 		bool checkblack();
+		void web_login();
 		void button(std::string value);
 		void upgrade(std::string username, std::string key);
 		void login(std::string username, std::string password, std::string code = "");
@@ -68,6 +75,7 @@ namespace KeyAuth {
 			std::string numKeys;
 			std::string version;
 			std::string customerPanelLink;
+			std::string downloadLink;
 		};
 
 		class responsedata {
@@ -95,8 +103,10 @@ namespace KeyAuth {
 		userdata user_data;
 		appdata app_data;
 		responsedata response;
+		Tfa tfa;
 
 	private:
 		std::string sessionid, enckey;
+		static void setDebug(bool value);
 	};
 }

@@ -89,7 +89,7 @@ void ui::render() {
             globals.checked_connection = true;
         }
 
-        if (globals.failed)
+        /*if (globals.failed)
         {
             TextCentered(globals.fail_message.c_str());
 
@@ -97,7 +97,7 @@ void ui::render() {
 
             if (globals.tick_count > 500)
                 exit(1337);
-        }
+        }*/
         
 
         
@@ -112,9 +112,10 @@ void ui::render() {
             ImGui::SetCursorPos(ImVec2(60, 110));
             ImGui::InputText("", globals.key, IM_ARRAYSIZE(globals.key));
 
-            KeyAuthApp.license(globals.key);  // Führt die Methode aus, aber speichert nichts in einer Variablen
+           KeyAuthApp.license(globals.key);  // Führt die Methode aus, aber speichert nichts in einer Variablen
 
-            
+            std::string username, password, key, TfaCode;
+
             
             //key_input = globals.key;
             
