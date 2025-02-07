@@ -296,22 +296,7 @@ void ui::render() {
     }
     ImGui::End();
 }
-void sessionStatus() {
-    KeyAuthApp.check(true); // do NOT specify true usually, it is slower and will get you blocked from API
-    if (!KeyAuthApp.response.success) {
-        exit(0);
-    }
 
-    if (KeyAuthApp.response.isPaid) {
-        while (true) {
-            Sleep(20000); // this MUST be included or else you get blocked from API
-            KeyAuthApp.check();
-            if (!KeyAuthApp.response.success) {
-                exit(0);
-            }
-        }
-    }
-}
 void ui::init(LPDIRECT3DDEVICE9 device) {
     dev = device;
 	
