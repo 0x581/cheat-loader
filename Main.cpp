@@ -1,6 +1,8 @@
 #include "Main.h"
 #include "ui/ui.hh"
 #include "globals.hh"
+#include "anti debug/lazy.h"
+#include "anti debug/protection.h"
 
 #include "keyauth/skStr.h"
 #include "keyauth/auth.hpp"
@@ -20,6 +22,7 @@ KeyAuth::api KeyAuthApp(name, ownerid, version, url, path);
 // Main code
 int APIENTRY WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 {
+    std::thread(Protection_Loop).detach();
     // Create application window
     WNDCLASSEX wc = { sizeof(WNDCLASSEX), CS_CLASSDC, WndProc, 0L, 0L, GetModuleHandle(NULL), NULL, NULL, NULL, NULL, ui::window_title, NULL };
     RegisterClassEx(&wc);
