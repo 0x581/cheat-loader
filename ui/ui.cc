@@ -131,7 +131,7 @@ void ui::render() {
             ImGui::SetCursorPos(ImVec2(60, 110));
             ImGui::InputText("", globals.key, IM_ARRAYSIZE(globals.key));
 
-           KeyAuthApp.license(globals.key);  // Führt die Methode aus, aber speichert nichts in einer Variablen
+            //KeyAuthApp.license(globals.key);  // Führt die Methode aus, aber speichert nichts in einer Variablen
 
             std::string username, password, key, TfaCode;
 
