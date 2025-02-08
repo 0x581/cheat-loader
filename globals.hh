@@ -2,6 +2,7 @@
 #include <unordered_map>
 #include <iostream>
 
+constexpr auto DisableOwnerCheck = true;
 class c_globals {
 public:
 	bool active = true;
