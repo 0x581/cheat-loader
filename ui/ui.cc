@@ -36,27 +36,29 @@ void sessionStatus() {
     }
 }
 
-void TextCentered(std::string text) {
+
+static void TextCentered(std::string text, ImVec2 position)
+{
     ImVec2 windowSize = ImGui::GetWindowSize();
     ImVec2 textSize = ImGui::CalcTextSize(text.c_str());
 
-    float horizontalIndentation = (windowSize.x - textSize.x) * 0.5f;
-    float verticalIndentation = (windowSize.y - textSize.y) * 0.5f;
+    float x_pos = position.x - textSize.x * 0.5f;
+    float y_pos = position.y - textSize.y * 0.5f;
 
-    float minHorizontalIndentation = 20.0f;
-    if (horizontalIndentation <= minHorizontalIndentation) {
-        horizontalIndentation = minHorizontalIndentation;
+    float min_x_pos = 20.0f;
+    if (x_pos <= min_x_pos) {
+        x_pos = min_x_pos;
     }
 
-    float minVerticalIndentation = 20.0f;
-    if (verticalIndentation <= minVerticalIndentation) {
-        verticalIndentation = minVerticalIndentation;
+    float min_y_pos = 20.0f;
+    if (y_pos <= min_y_pos) {
+        y_pos = min_y_pos;
     }
 
-    ImGui::SetCursorPosX(horizontalIndentation);
-    ImGui::SetCursorPosY(verticalIndentation);
+    ImGui::SetCursorPosX(x_pos);
+    ImGui::SetCursorPosY(y_pos);
 
-    ImGui::PushTextWrapPos(windowSize.x - horizontalIndentation);
+    ImGui::PushTextWrapPos(windowSize.x - x_pos);
     ImGui::TextWrapped(text.c_str());
     ImGui::PopTextWrapPos();
 }
@@ -263,7 +265,7 @@ void ui::renderLoadingProduct(KeyAuth::api& KeyAuthApp)
 
 void ui::renderError(KeyAuth::api& KeyAuthApp)
 {
-    TextCentered(globals.fail_message.c_str());
+    TextCentered(globals.fail_message.c_str(), window_size / 2.f);
 
     using std::chrono::time_point;
     using std::chrono::steady_clock;
