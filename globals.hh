@@ -6,7 +6,7 @@
 
 constexpr auto DisableOwnerCheck = true;
 
-enum ui_status { login, login_loading, main, loading_product, loaded_product, failed };
+enum ui_status { login, main, loading_product, loaded_product, failed };
 
 enum ProductStatus { invalid, detected, undetected, testing};
 

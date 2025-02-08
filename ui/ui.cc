@@ -93,20 +93,6 @@ void ui::renderMain(KeyAuth::api& KeyAuthApp)
 
         check_started = true;
     }
-
-    auto p = ImGui::GetWindowPos();
-    ImGuiContext& g = *GImGui;
-    ImFont* font = g.Font;
-    // Convert to std::string and concatenate
-
-    window_title = "Merkur loader";
-
-
-
-    //ImGui::SetCursorPos(ImVec2(10, 25));
-    //ImGui::GetWindowDrawList()->AddRectFilled(ImVec2(p.x + 15, p.y + 35), ImVec2(p.x + 205, p.y + 180), ImColor(0, 0, 0, int(55)), 0);
-    //ImGui::GetWindowDrawList()->AddRect(ImVec2(p.x + 15, p.y + 35), ImVec2(p.x + 205, p.y + 180), ImColor(97, 173, 255, int(25)), 0);
-
     // Products tab
 
     globals.products[0] = ProductInfo{
@@ -140,7 +126,6 @@ void ui::renderMain(KeyAuth::api& KeyAuthApp)
 
     for (; product_count < 16 && globals.products[product_count].valid; ++product_count);
 
-
     char const** items = new char const* [product_count];
     
     for (int i = 0; i < product_count; i++)
@@ -148,10 +133,17 @@ void ui::renderMain(KeyAuth::api& KeyAuthApp)
         items[i] = globals.products[i].name.c_str();
     }
 
-    ImGui::SetCursorPos(ImVec2(15, 30));
+    auto p = ImGui::GetWindowPos();
+    ImGuiContext& g = *GImGui;
+    ImFont* font = g.Font;
+
+    auto& drawlist = *ImGui::GetWindowDrawList();
+
+    //  Products tab
+    ImGui::SetCursorPos(ImVec2(window_size.x * 0.0375f, window_size.y * 0.1f));
     ImGui::Text(skCrypt("Products"));
 
-    ImGui::SetCursorPos(ImVec2(15, 50));
+    ImGui::SetCursorPos(ImVec2(window_size.x * 0.0375f, window_size.y * 0.16666f));
 
     ImGui::ListBox("", &globals.selectedProduct, items, product_count, 4);
 
