@@ -96,7 +96,7 @@ int APIENTRY WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
                 KeyAuthApp.init();
                 if (!KeyAuthApp.response.success)
                 {
-                    globals.fail_message = KeyAuthApp.response.message;
+                    globals.error_message = KeyAuthApp.response.message;
                     globals.form_state = failed;
                 }
 

@@ -8,24 +8,24 @@ constexpr auto DisableOwnerCheck = true;
 
 enum ui_status { login, login_loading, main, loading_product, loaded_product, failed };
 
-enum ProductStatus {detected, undetected, testing};
+enum ProductStatus { invalid, detected, undetected, testing};
 
 
 struct ProductInfo
 {
 	bool valid = false;
-	std::string name;
-	ProductStatus status;
-	std::string version;
-	std::string last_update;
-	std::string key;
+	std::string name{ 0 };
+	ProductStatus status{ invalid };
+	std::string version{ 0 };
+	std::string last_update{ 0 };
+	std::string key{ 0 };
 };
 
 class c_globals {
 public:
 	bool active = true;
 	ui_status form_state;
-	std::string fail_message = "";
+	std::string error_message = "";
 
 	char key[255]{ 0 };
 

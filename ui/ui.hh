@@ -3,6 +3,8 @@
 #include "../imgui/imgui.h"
 #include "../keyauth/auth.hpp"
 
+#include "../defines.hpp"
+
 
 namespace ui {
 	void init(LPDIRECT3DDEVICE9);
@@ -15,12 +17,12 @@ namespace ui {
 
 namespace ui {
 	inline LPDIRECT3DDEVICE9 dev;
-	inline const char* window_title = "https://discord.gg/gYAV66mbsr";
+	inline const char* window_title = "Merkur loader";
 }
 
 namespace ui {
 	inline ImVec2 screen_res{ 000, 000 };
 	inline ImVec2 window_pos{ 0, 0 };
-	inline ImVec2 window_size{ 400, 300 };
+	inline ImVec2 window_size{ 400 * UIDefines::window_scaling, 300 * UIDefines::window_scaling };
 	inline DWORD  window_flags = ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoScrollbar;
 }

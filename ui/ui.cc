@@ -1,35 +1,17 @@
 #include "ui.hh"
-#include "../globals.hh"
-#include "../imgui/imgui.h"
-#include "../imgui/imgui_internal.h"
+
 #include <thread>
+
+#include "../imgui/imgui_internal.h"
+
+#include "../globals.hh"
 #include "../keyauth/utils.hpp"
-#include "../keyauth/skStr.h"
-#include "../keyauth/auth.hpp"
 
 
-void sessionStatus(KeyAuth::api& KeyAuthApp) {
-    KeyAuthApp.check(true); // do NOT specify true usually, it is slower and will get you blocked from API
-    if (!KeyAuthApp.response.success) {
-        exit(0);
-    }
-
-    if (KeyAuthApp.response.isPaid) {
-        while (true) {
-            Sleep(20000); // this MUST be included or else you get blocked from API
-            KeyAuthApp.check();
-            if (!KeyAuthApp.response.success) {
-                exit(0);
-            }
-        }
-    }
-}
-
-
-static void TextCentered(std::string text, ImVec2 position)
+static void TextCentered(const char* text, ImVec2 position)
 {
     ImVec2 windowSize = ImGui::GetWindowSize();
-    ImVec2 textSize = ImGui::CalcTextSize(text.c_str());
+    ImVec2 textSize = ImGui::CalcTextSize(text);
 
     float x_pos = position.x - textSize.x * 0.5f;
     float y_pos = position.y - textSize.y * 0.5f;
@@ -47,8 +29,14 @@ static void TextCentered(std::string text, ImVec2 position)
     ImGui::SetCursorPos(ImVec2(x_pos, y_pos));
 
     ImGui::PushTextWrapPos(windowSize.x - x_pos);
-    ImGui::TextWrapped(text.c_str());
+    ImGui::TextWrapped(text);
     ImGui::PopTextWrapPos();
+}
+
+
+static void TextCentered(const std::string text, ImVec2 position)
+{
+    TextCentered(text.c_str(), position);
 }
 
 
@@ -83,7 +71,7 @@ void ui::renderLogin(KeyAuth::api& KeyAuthApp)
     }
     else
     {
-        globals.fail_message = KeyAuthApp.response.message;
+        globals.error_message = KeyAuthApp.response.message;
         globals.form_state = failed;
     }
 }
@@ -201,7 +189,7 @@ void ui::renderMain(KeyAuth::api& KeyAuthApp)
 
     ImGui::SetCursorPos(ImVec2(25, 190));
     ImGui::Text("Status: ");
-    int status_width = ImGui::CalcTextSize(skCrypt("Status: ")).x;
+    const auto status_width = ImGui::CalcTextSize(skCrypt("Status: ")).x;
 
     std::string status_string = "";
     ImColor status_color{ 0 };
@@ -230,11 +218,11 @@ void ui::renderMain(KeyAuth::api& KeyAuthApp)
 
 
     ImGui::Text(skCrypt("Last Update: "));
-    int last_update_width = ImGui::CalcTextSize(skCrypt("Last Update: ")).x;
+    const auto last_update_width = ImGui::CalcTextSize(skCrypt("Last Update: ")).x;
     ImGui::GetWindowDrawList()->AddText(font, 13, ImVec2(p.x + 25 + last_update_width, p.y + 210), ImColor(99, 182, 255, int(255)), selectedProduct.last_update.c_str());
     ImGui::SetCursorPos(ImVec2(25, 230));
     ImGui::Text(skCrypt("Version: "));
-    int version_width = ImGui::CalcTextSize(skCrypt("Version: ")).x;
+    const auto version_width = ImGui::CalcTextSize(skCrypt("Version: ")).x;
     ImGui::GetWindowDrawList()->AddText(font, 13, ImVec2(p.x + 25 + version_width, p.y + 230), ImColor(99, 182, 255, int(255)), selectedProduct.version.c_str());
     ImGui::SetCursorPos(ImVec2(25, 250));
     //ImGui::Text("Connection: ");
@@ -248,13 +236,13 @@ void ui::renderMain(KeyAuth::api& KeyAuthApp)
 void ui::renderLoadingProduct(KeyAuth::api& KeyAuthApp)
 {
     globals.form_state = failed;
-    globals.fail_message = "renderLoadingProduct not implemented";
+    globals.error_message = "renderLoadingProduct not implemented";
 }
 
 
 void ui::renderError(KeyAuth::api& KeyAuthApp)
 {
-    TextCentered(globals.fail_message, window_size / 2.f);
+    TextCentered(globals.error_message, window_size / 2.f);
 
     using std::chrono::time_point;
     using std::chrono::steady_clock;
