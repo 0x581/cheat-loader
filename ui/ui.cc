@@ -19,8 +19,6 @@ KeyAuth::api KeyAuthApp(name, ownerid, version, url, path);
 
 
 
-std::string username, password, key, TfaCode;
-
 void sessionStatus() {
     KeyAuthApp.check(true); // do NOT specify true usually, it is slower and will get you blocked from API
     if (!KeyAuthApp.response.success) {
@@ -74,20 +72,28 @@ void ui::renderLogin(KeyAuth::api& KeyAuthApp)
     ImGui::SetCursorPos(ImVec2(60, 110));
     ImGui::InputText("", globals.key, IM_ARRAYSIZE(globals.key));
 
-    //key_input = globals.key;
-
+    static std::atomic<bool> license_done = false;
 
     ImGui::SetCursorPos(ImVec2(60, 150));
     if (ImGui::Button("LOGIN", ImVec2(260, 20))) {
-        KeyAuthApp.license(globals.key);  // Führt die Methode aus, aber speichert nichts in einer Variablen
-        if (KeyAuthApp.response.success) {
-            globals.form_state = main;
-        }
-        else
-        {
-            globals.fail_message = KeyAuthApp.response.message;
-            globals.form_state = failed;
-        }
+        static std::thread license_thread{
+            [&]() {
+                KeyAuthApp.license(globals.key);
+                license_done = true;
+            }
+        };
+    }
+
+    if (!license_done)
+        return;
+
+    if (KeyAuthApp.response.success) {
+        globals.form_state = main;
+    }
+    else
+    {
+        globals.fail_message = KeyAuthApp.response.message;
+        globals.form_state = failed;
     }
 }
 
@@ -167,27 +173,27 @@ void ui::renderMain(KeyAuth::api& KeyAuthApp)
     {
         status_color = ImColor(89, 255, 0, int(255));
         globals.status = "undetected"; // ofc ;)
-        globals.last_uptade = "29.09.2023";
+        globals.last_update = "29.09.2023";
         globals.version = "3.3.0";
     }
     else if (item_current == 1)
     {
         status_color = ImColor(201, 204, 0, int(255));
         globals.status = "testing";
-        globals.last_uptade = "12.09.2023";
+        globals.last_update = "12.09.2023";
         globals.version = "0.9.7";
     }
     else if (item_current == 2)
     {
         status_color = ImColor(200, 0, 0, int(255));
         globals.status = "detected";
-        globals.last_uptade = "15.09.2023";
+        globals.last_update = "15.09.2023";
         globals.version = "0.2.7";
     }
     else // and so on...
     {
         globals.status = "unknown";
-        globals.last_uptade = "unknown";
+        globals.last_update = "unknown";
         globals.version = "unknown";
         status_color = ImColor(252, 186, 3, int(255));
     }
@@ -197,7 +203,7 @@ void ui::renderMain(KeyAuth::api& KeyAuthApp)
 
     ImGui::Text("Last Update: ");
     int last_update_width = ImGui::CalcTextSize("Last Update: ").x;
-    ImGui::GetWindowDrawList()->AddText(font, 13, ImVec2(p.x + 25 + last_update_width, p.y + 210), ImColor(99, 182, 255, int(255)), globals.last_uptade.c_str());
+    ImGui::GetWindowDrawList()->AddText(font, 13, ImVec2(p.x + 25 + last_update_width, p.y + 210), ImColor(99, 182, 255, int(255)), globals.last_update.c_str());
     ImGui::SetCursorPos(ImVec2(25, 230));
     ImGui::Text("Version: ");
     int version_width = ImGui::CalcTextSize("Version: ").x;
