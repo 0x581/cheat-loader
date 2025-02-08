@@ -209,47 +209,8 @@ void ui::renderMain(KeyAuth::api& KeyAuthApp)
 
 void ui::renderLoadingProduct(KeyAuth::api& KeyAuthApp)
 {
-    ImGuiStyle& style = ImGui::GetStyle();
-
-    static float
-        progress = 0.0f,
-        progress_dir = 1.0f,
-        limitter = 1.0f;
-
-    if (progress < limitter)
-    {
-        ImGui::SetCursorPos(ImVec2(7, 130));
-        style.Colors[ImGuiCol_PlotHistogram] = ImVec4(0.26f, 0.59f, 0.98f, 0.67f);
-        ImGui::ProgressBar(progress, ImVec2(385.0f, 20.0f));
-
-        if (progress < 0.25 && globals.final_selected_product != 0)
-        {
-            progress += progress_dir * 0.5f * ImGui::GetIO().DeltaTime;
-            globals.fail_message = "Product is currently under maintenance";
-            globals.tick_count2++;
-
-            if (globals.tick_count2 > 50)
-                globals.form_state = failed;
-        }
-        else
-            progress += progress_dir * 0.5f * ImGui::GetIO().DeltaTime;
-    }
-    else
-    {
-        if (globals.final_selected_product == 0)
-        {
-            if (!globals.form_state == loaded_product)
-            {
-            }
-
-            globals.form_state = loaded_product;
-            TextCentered("Loaded!");
-            globals.tick_count++;
-
-            if (globals.tick_count > 500)
-                exit(1337);
-        }
-    }
+    globals.form_state = failed;
+    globals.fail_message = "renderLoadingProduct not implemented";
 }
 
 
