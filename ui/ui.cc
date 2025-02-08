@@ -120,29 +120,73 @@ void ui::renderMain(KeyAuth::api& KeyAuthApp)
     //ImGui::GetWindowDrawList()->AddRect(ImVec2(p.x + 15, p.y + 35), ImVec2(p.x + 205, p.y + 180), ImColor(97, 173, 255, int(25)), 0);
 
     // Products tab
-    const char* items[] = { "cs2", "product 2", "product 3" };
-    static int item_current = 0;
+
+    globals.products[0] = ProductInfo{
+        .valid = true,
+        .name = "CounterStrike 2 Cheat",
+        .status = undetected,
+        .version = "0.1.0",
+        .last_update = "05.02.2025",
+        .key = globals.key,
+    };
+
+    globals.products[1] = ProductInfo{
+        .valid = true,
+        .name = "Product placeholder 1",
+        .status = detected,
+        .version = "1.0.2",
+        .last_update = "04.01.2024",
+        .key = "No valid key provided",
+    };
+
+    globals.products[2] = ProductInfo{
+        .valid = true,
+        .name = "Product placeholder 2",
+        .status = testing,
+        .version = "1.2.1",
+        .last_update = "05.07.2024",
+        .key = "No valid key provided",
+    };
+
+    int product_count = 0;
+
+    for (; product_count < 16 && globals.products[product_count].valid; ++product_count);
+
+
+    char const** items = new char const* [product_count];
+    
+    for (int i = 0; i < product_count; i++)
+    {
+        items[i] = globals.products[i].name.c_str();
+    }
+
     ImGui::SetCursorPos(ImVec2(15, 30));
     ImGui::Text("Products");
+
     ImGui::SetCursorPos(ImVec2(15, 50));
-    ImGui::ListBox("", &item_current, items, IM_ARRAYSIZE(items), 4);
+
+    ImGui::ListBox("", &globals.selectedProduct, items, product_count, 4);
+
     ImGui::GetWindowDrawList()->AddRect(ImVec2(p.x + 15, p.y + 50), ImVec2(p.x + 185, p.y + 145), ImColor(97, 173, 255, int(25)), 0);
 
     // Load tab
     ImGui::SetCursorPos(ImVec2(200, 30));
     ImGui::Text("Load");
+
     ImGui::GetWindowDrawList()->AddRectFilled(ImVec2(p.x + 200, p.y + 50), ImVec2(p.x + 385, p.y + 145), ImColor(19, 19, 19, int(255)), 0);
     ImGui::GetWindowDrawList()->AddRect(ImVec2(p.x + 200, p.y + 50), ImVec2(p.x + 385, p.y + 145), ImColor(97, 173, 255, int(25)), 0);
-    std::string current_product = "";
-    const char* selectedText = items[item_current];
-    current_product = selectedText;
+
+    ProductInfo& selectedProduct = globals.products[globals.selectedProduct];
+
     ImGui::SetCursorPos(ImVec2(210, 60));
-    ImGui::Text(current_product.c_str());
+    ImGui::Text(selectedProduct.name.c_str());
+
     ImGui::SetCursorPos(ImVec2(210, 80));
     if (ImGui::Button("LOAD", ImVec2(165, 20))) {
-        globals.final_selected_product = item_current;
+        globals.final_selected_product = globals.selectedProduct;
         globals.form_state = loading_product;
     }
+
     ImGui::SetCursorPos(ImVec2(210, 110));
     if (ImGui::Button("EXIT", ImVec2(165, 20))) {
         exit(1337);
@@ -151,59 +195,53 @@ void ui::renderMain(KeyAuth::api& KeyAuthApp)
     // Information tab
     ImGui::SetCursorPos(ImVec2(15, 160));
     ImGui::Text("Information");
+
     ImGui::GetWindowDrawList()->AddRectFilled(ImVec2(p.x + 15, p.y + 35 + 35 + 180 + 30), ImVec2(p.x + 385, p.y + 180), ImColor(19, 19, 19, int(255)), 0);
     ImGui::GetWindowDrawList()->AddRect(ImVec2(p.x + 15, p.y + 35 + 35 + 180 + 30), ImVec2(p.x + 385, p.y + 180), ImColor(97, 173, 255, int(25)), 0);
+
     ImGui::SetCursorPos(ImVec2(25, 190));
     ImGui::Text("Status: ");
     int status_width = ImGui::CalcTextSize("Status: ").x;
-    ImColor status_color;
-    ImColor(89, 255, 0, int(255));//green
-    ImColor(201, 204, 0, int(255));//yelllow
-    ImColor(200, 0, 0, int(255));//red
-    // ofc u should initialize strings as globals.version / globals.last_uptade / globals.status in loading screen or somewhere else... this is a ghetto example
-    if (item_current == 0)
+
+    std::string status_string = "";
+    ImColor status_color{ 0 };
+
+    switch (selectedProduct.status)
     {
-        status_color = ImColor(89, 255, 0, int(255));
-        globals.status = "undetected"; // ofc ;)
-        globals.last_update = "29.09.2023";
-        globals.version = "3.3.0";
+    case detected:
+        status_string = skCrypt("detected").decrypt();
+        status_color = ImColor(200, 0, 0, int(255));    //red
+        break;
+    case undetected:
+        status_string = skCrypt("undetected").decrypt();
+        status_color = ImColor(89, 255, 0, int(255));   //green
+        break;
+    case testing:
+        status_string = skCrypt("testing").decrypt();
+        status_color = ImColor(201, 204, 0, int(255));  //yellow
+        break;
+    default:
+        exit(6969);
     }
-    else if (item_current == 1)
-    {
-        status_color = ImColor(201, 204, 0, int(255));
-        globals.status = "testing";
-        globals.last_update = "12.09.2023";
-        globals.version = "0.9.7";
-    }
-    else if (item_current == 2)
-    {
-        status_color = ImColor(200, 0, 0, int(255));
-        globals.status = "detected";
-        globals.last_update = "15.09.2023";
-        globals.version = "0.2.7";
-    }
-    else // and so on...
-    {
-        globals.status = "unknown";
-        globals.last_update = "unknown";
-        globals.version = "unknown";
-        status_color = ImColor(252, 186, 3, int(255));
-    }
-    ImGui::GetWindowDrawList()->AddText(font, 13, ImVec2(p.x + 25 + status_width, p.y + 190), status_color, globals.status.c_str());
+
+
+    ImGui::GetWindowDrawList()->AddText(font, 13, ImVec2(p.x + 25 + status_width, p.y + 190), status_color, status_string.c_str());
     ImGui::SetCursorPos(ImVec2(25, 210));
 
 
     ImGui::Text("Last Update: ");
     int last_update_width = ImGui::CalcTextSize("Last Update: ").x;
-    ImGui::GetWindowDrawList()->AddText(font, 13, ImVec2(p.x + 25 + last_update_width, p.y + 210), ImColor(99, 182, 255, int(255)), globals.last_update.c_str());
+    ImGui::GetWindowDrawList()->AddText(font, 13, ImVec2(p.x + 25 + last_update_width, p.y + 210), ImColor(99, 182, 255, int(255)), selectedProduct.last_update.c_str());
     ImGui::SetCursorPos(ImVec2(25, 230));
     ImGui::Text("Version: ");
     int version_width = ImGui::CalcTextSize("Version: ").x;
-    ImGui::GetWindowDrawList()->AddText(font, 13, ImVec2(p.x + 25 + version_width, p.y + 230), ImColor(99, 182, 255, int(255)), globals.version.c_str());
+    ImGui::GetWindowDrawList()->AddText(font, 13, ImVec2(p.x + 25 + version_width, p.y + 230), ImColor(99, 182, 255, int(255)), selectedProduct.version.c_str());
     ImGui::SetCursorPos(ImVec2(25, 250));
-    ImGui::Text("Connection: ");
-    int connection_width = ImGui::CalcTextSize("Connection: ").x;
-    ImGui::GetWindowDrawList()->AddText(font, 13, ImVec2(p.x + 25 + connection_width, p.y + 250), ImColor(89, 255, 0, int(255)), globals.connection_message.c_str());
+    //ImGui::Text("Connection: ");
+    //int connection_width = ImGui::CalcTextSize("Connection: ").x;
+    //ImGui::GetWindowDrawList()->AddText(font, 13, ImVec2(p.x + 25 + connection_width, p.y + 250), ImColor(89, 255, 0, int(255)), globals.connection_message.c_str());
+
+    delete[] items;
 }
 
 
