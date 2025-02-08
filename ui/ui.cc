@@ -66,7 +66,7 @@ void ui::renderLogin(KeyAuth::api& KeyAuthApp)
 {
     int status_width = ImGui::CalcTextSize("KEY").x * 0.5;
     ImGui::SetCursorPos(ImVec2(200 - status_width, 70));
-    ImGui::Text("KEY");
+    ImGui::Text(skCrypt("KEY").decrypt());
 
 
     ImGui::SetCursorPos(ImVec2(60, 110));
@@ -75,7 +75,7 @@ void ui::renderLogin(KeyAuth::api& KeyAuthApp)
     static std::atomic<bool> license_done = false;
 
     ImGui::SetCursorPos(ImVec2(60, 150));
-    if (ImGui::Button("LOGIN", ImVec2(260, 20))) {
+    if (ImGui::Button(skCrypt("LOGIN").decrypt(), ImVec2(260, 20))) {
         static std::thread license_thread{
             [&]() {
                 KeyAuthApp.license(globals.key);
