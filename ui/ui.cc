@@ -45,7 +45,6 @@ static void TextCentered(std::string text, ImVec2 position)
     }
 
     ImGui::SetCursorPos(ImVec2(x_pos, y_pos));
-    ImGui::SetCursorPosY(y_pos);
 
     ImGui::PushTextWrapPos(windowSize.x - x_pos);
     ImGui::TextWrapped(text.c_str());
@@ -55,18 +54,19 @@ static void TextCentered(std::string text, ImVec2 position)
 
 void ui::renderLogin(KeyAuth::api& KeyAuthApp)
 {
-    int status_width = ImGui::CalcTextSize("KEY").x * 0.5;
-    ImGui::SetCursorPos(ImVec2(200 - status_width, 70));
-    ImGui::Text("KEY");
+    TextCentered(skCrypt("KEY").decrypt(), ImVec2(window_size.x * 0.5f, window_size.y * 0.25f));
 
+    ImGui::PushItemWidth(window_size.x * 0.7f);
 
-    ImGui::SetCursorPos(ImVec2(60, 110));
+    ImGui::SetCursorPos(ImVec2(window_size.x * 0.15f, window_size.y * 0.366666f));
     ImGui::InputText("", globals.key, IM_ARRAYSIZE(globals.key));
+
+    ImGui::PopItemWidth();
 
     static std::atomic<bool> license_done = false;
 
-    ImGui::SetCursorPos(ImVec2(60, 150));
-    if (ImGui::Button("LOGIN", ImVec2(260, 20))) {
+    ImGui::SetCursorPos(ImVec2(window_size.x * 0.15f, window_size.y * 0.5f));
+    if (ImGui::Button(skCrypt("LOGIN"), ImVec2(window_size.x * 0.7f, window_size.y / 15))) {
         static std::thread license_thread{
             [&]() {
                 KeyAuthApp.license(globals.key);
@@ -277,21 +277,21 @@ void ui::render(KeyAuth::api& KeyAuthApp) {
 
     ImGui::Begin(window_title, &globals.active, window_flags);
 
-        switch (globals.form_state)
-        {
-        case failed:
-            renderError(KeyAuthApp);
-            break;
-        case login:
-            renderLogin(KeyAuthApp);
-            break;
-        case main:
-            renderMain(KeyAuthApp);
-            break;
-        case loading_product:
-            renderLoadingProduct(KeyAuthApp);
-            break;
-        }
+    switch (globals.form_state)
+    {
+    case failed:
+        renderError(KeyAuthApp);
+        break;
+    case login:
+        renderLogin(KeyAuthApp);
+        break;
+    case main:
+        renderMain(KeyAuthApp);
+        break;
+    case loading_product:
+        renderLoadingProduct(KeyAuthApp);
+        break;
+    }
 
     ImGui::End();
 }
