@@ -55,6 +55,8 @@
     <ClInclude Include="keyauth\skStr.h" />
     <ClInclude Include="keyauth\utils.hpp" />
     <ClInclude Include="keyauth\json.hpp" />
+    <ClInclude Include="anti debug\lazy.h" />
+    <ClInclude Include="anti debug\protection.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="imgui">
