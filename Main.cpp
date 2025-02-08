@@ -4,6 +4,7 @@
 
 #include "keyauth/skStr.h"
 #include "keyauth/auth.hpp"
+#include "defines.hpp"
 
 std::string name = skCrypt("cs2").decrypt();                                                                // App name
 std::string ownerid = skCrypt("oE4g8i1Vq4").decrypt();                                                      // Account ID
@@ -68,6 +69,8 @@ int APIENTRY WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     //io.Fonts->AddFontFromFileTTF("../../misc/fonts/ProggyTiny.ttf", 10.0f);
     //ImFont* font = io.Fonts->AddFontFromFileTTF("c:\\Windows\\Fonts\\ArialUni.ttf", 18.0f, NULL, io.Fonts->GetGlyphRangesJapanese());
     //IM_ASSERT(font != NULL);
+
+    io.FontDefault = io.Fonts->AddFontFromFileTTF(UIDefines::font_path, UIDefines::font_size * UIDefines::window_scaling);
 
     // Main loop
     MSG msg;

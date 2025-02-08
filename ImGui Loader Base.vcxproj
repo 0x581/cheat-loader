@@ -143,6 +143,7 @@
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="defines.hpp" />
     <ClInclude Include="globals.hh" />
     <ClInclude Include="keyauth\auth.hpp" />
     <ClInclude Include="keyauth\json.hpp" />
