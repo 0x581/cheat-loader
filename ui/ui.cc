@@ -44,7 +44,7 @@ static void TextCentered(std::string text, ImVec2 position)
         y_pos = min_y_pos;
     }
 
-    ImGui::SetCursorPosX(x_pos);
+    ImGui::SetCursorPos(ImVec2(x_pos, y_pos));
     ImGui::SetCursorPosY(y_pos);
 
     ImGui::PushTextWrapPos(windowSize.x - x_pos);
@@ -111,7 +111,7 @@ void ui::renderMain(KeyAuth::api& KeyAuthApp)
     ImFont* font = g.Font;
     // Convert to std::string and concatenate
 
-    window_title = "https://discord.gg/96Xpa8XX4t | Merkur loader";
+    window_title = "Merkur loader";
 
 
 
@@ -161,7 +161,7 @@ void ui::renderMain(KeyAuth::api& KeyAuthApp)
     }
 
     ImGui::SetCursorPos(ImVec2(15, 30));
-    ImGui::Text("Products");
+    ImGui::Text(skCrypt("Products"));
 
     ImGui::SetCursorPos(ImVec2(15, 50));
 
@@ -171,7 +171,7 @@ void ui::renderMain(KeyAuth::api& KeyAuthApp)
 
     // Load tab
     ImGui::SetCursorPos(ImVec2(200, 30));
-    ImGui::Text("Load");
+    ImGui::Text(skCrypt("Load"));
 
     ImGui::GetWindowDrawList()->AddRectFilled(ImVec2(p.x + 200, p.y + 50), ImVec2(p.x + 385, p.y + 145), ImColor(19, 19, 19, int(255)), 0);
     ImGui::GetWindowDrawList()->AddRect(ImVec2(p.x + 200, p.y + 50), ImVec2(p.x + 385, p.y + 145), ImColor(97, 173, 255, int(25)), 0);
@@ -182,26 +182,26 @@ void ui::renderMain(KeyAuth::api& KeyAuthApp)
     ImGui::Text(selectedProduct.name.c_str());
 
     ImGui::SetCursorPos(ImVec2(210, 80));
-    if (ImGui::Button("LOAD", ImVec2(165, 20))) {
+    if (ImGui::Button(skCrypt("LOAD"), ImVec2(165, 20))) {
         globals.final_selected_product = globals.selectedProduct;
         globals.form_state = loading_product;
     }
 
     ImGui::SetCursorPos(ImVec2(210, 110));
-    if (ImGui::Button("EXIT", ImVec2(165, 20))) {
+    if (ImGui::Button(skCrypt("EXIT"), ImVec2(165, 20))) {
         exit(1337);
     }
 
     // Information tab
     ImGui::SetCursorPos(ImVec2(15, 160));
-    ImGui::Text("Information");
+    ImGui::Text(skCrypt("Information"));
 
     ImGui::GetWindowDrawList()->AddRectFilled(ImVec2(p.x + 15, p.y + 35 + 35 + 180 + 30), ImVec2(p.x + 385, p.y + 180), ImColor(19, 19, 19, int(255)), 0);
     ImGui::GetWindowDrawList()->AddRect(ImVec2(p.x + 15, p.y + 35 + 35 + 180 + 30), ImVec2(p.x + 385, p.y + 180), ImColor(97, 173, 255, int(25)), 0);
 
     ImGui::SetCursorPos(ImVec2(25, 190));
     ImGui::Text("Status: ");
-    int status_width = ImGui::CalcTextSize("Status: ").x;
+    int status_width = ImGui::CalcTextSize(skCrypt("Status: ")).x;
 
     std::string status_string = "";
     ImColor status_color{ 0 };
@@ -229,12 +229,12 @@ void ui::renderMain(KeyAuth::api& KeyAuthApp)
     ImGui::SetCursorPos(ImVec2(25, 210));
 
 
-    ImGui::Text("Last Update: ");
-    int last_update_width = ImGui::CalcTextSize("Last Update: ").x;
+    ImGui::Text(skCrypt("Last Update: "));
+    int last_update_width = ImGui::CalcTextSize(skCrypt("Last Update: ")).x;
     ImGui::GetWindowDrawList()->AddText(font, 13, ImVec2(p.x + 25 + last_update_width, p.y + 210), ImColor(99, 182, 255, int(255)), selectedProduct.last_update.c_str());
     ImGui::SetCursorPos(ImVec2(25, 230));
-    ImGui::Text("Version: ");
-    int version_width = ImGui::CalcTextSize("Version: ").x;
+    ImGui::Text(skCrypt("Version: "));
+    int version_width = ImGui::CalcTextSize(skCrypt("Version: ")).x;
     ImGui::GetWindowDrawList()->AddText(font, 13, ImVec2(p.x + 25 + version_width, p.y + 230), ImColor(99, 182, 255, int(255)), selectedProduct.version.c_str());
     ImGui::SetCursorPos(ImVec2(25, 250));
     //ImGui::Text("Connection: ");
@@ -254,7 +254,7 @@ void ui::renderLoadingProduct(KeyAuth::api& KeyAuthApp)
 
 void ui::renderError(KeyAuth::api& KeyAuthApp)
 {
-    TextCentered(globals.fail_message.c_str(), window_size / 2.f);
+    TextCentered(globals.fail_message, window_size / 2.f);
 
     using std::chrono::time_point;
     using std::chrono::steady_clock;
@@ -276,7 +276,7 @@ void ui::render(KeyAuth::api& KeyAuthApp) {
     ImGui::SetNextWindowBgAlpha(1.0f);
 
     ImGui::Begin(window_title, &globals.active, window_flags);
-    {
+
         switch (globals.form_state)
         {
         case failed:
@@ -292,7 +292,7 @@ void ui::render(KeyAuth::api& KeyAuthApp) {
             renderLoadingProduct(KeyAuthApp);
             break;
         }
-    }
+
     ImGui::End();
 }
 
