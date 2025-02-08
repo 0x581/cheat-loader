@@ -6,11 +6,11 @@
 
 namespace ui {
 	void init(LPDIRECT3DDEVICE9);
-	void renderLogin(KeyAuth::api &KeyAuthApi);
-	void renderMain(KeyAuth::api& KeyAuthApp);
-	void renderLoadingProduct(KeyAuth::api& KeyAuthApp);
-	void renderError(KeyAuth::api& KeyAuthApp);
-	void render();
+	void renderLogin(KeyAuth::api&);
+	void renderMain(KeyAuth::api&);
+	void renderLoadingProduct(KeyAuth::api&);
+	void renderError(KeyAuth::api&);
+	void render(KeyAuth::api&);
 }
 
 namespace ui {

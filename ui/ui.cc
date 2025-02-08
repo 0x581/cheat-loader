@@ -7,19 +7,8 @@
 #include "../keyauth/skStr.h"
 #include "../keyauth/auth.hpp"
 
-std::string name = skCrypt("cs2").decrypt(); // App name
-std::string ownerid = skCrypt("oE4g8i1Vq4").decrypt(); // Account ID
-std::string secret = skCrypt("8fd8b7aade64ce87387132e9f56908a824d9ceeb525a1dbe97999767e4bf02ed").decrypt(); // Application secret (not used in latest C++ example)
-std::string version = skCrypt("1.0").decrypt(); // Application version. Used for automatic downloads see video here https://www.youtube.com/watch?v=kW195PLCBKs
-std::string url = skCrypt("https://keyauth.win/api/1.3/").decrypt(); // change if using KeyAuth custom domains feature
-std::string path = skCrypt("").decrypt(); // (OPTIONAL) see tutorial here https://www.youtube.com/watch?v=I9rxt821gMk&t=1s
 
-
-KeyAuth::api KeyAuthApp(name, ownerid, version, url, path);
-
-
-
-void sessionStatus() {
+void sessionStatus(KeyAuth::api& KeyAuthApp) {
     KeyAuthApp.check(true); // do NOT specify true usually, it is slower and will get you blocked from API
     if (!KeyAuthApp.response.success) {
         exit(0);
@@ -109,9 +98,10 @@ void ui::renderMain(KeyAuth::api& KeyAuthApp)
        * Do NOT remove this checkAuthenticated() function.
        * It protects you from cracking, it would be NOT be a good idea to remove it
        */
-        std::thread run(checkAuthenticated, ownerid);
+        std::thread run(checkAuthenticated, KeyAuthApp.ownerid);
+
         // do NOT remove checkAuthenticated(), it MUST stay for security reasons
-        std::thread check(sessionStatus); // do NOT remove this function either.
+        std::thread check(sessionStatus, std::ref(KeyAuthApp)); // do NOT remove this function either.
 
         check_started = true;
     }
@@ -279,20 +269,8 @@ void ui::renderError(KeyAuth::api& KeyAuthApp)
 }
 
 
-void ui::render() {
+void ui::render(KeyAuth::api& KeyAuthApp) {
     if (!globals.active) return;
-    static bool first = true;
-
-    if (first) {
-        KeyAuthApp.init();
-        if (!KeyAuthApp.response.success)
-        {
-            //std::cout << skCrypt("\n Status: ") << KeyAuthApp.response.message;
-            Sleep(1500);
-            exit(1);
-        }
-        first = false;
-    }
 
     ImGui::SetNextWindowPos(ImVec2(window_pos.x, window_pos.y), ImGuiCond_Once);
     ImGui::SetNextWindowSize(ImVec2(window_size.x, window_size.y));
@@ -318,6 +296,7 @@ void ui::render() {
     }
     ImGui::End();
 }
+
 
 void ui::init(LPDIRECT3DDEVICE9 device) {
     dev = device;

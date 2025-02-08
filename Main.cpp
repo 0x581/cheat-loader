@@ -2,6 +2,20 @@
 #include "ui/ui.hh"
 #include "globals.hh"
 
+#include "keyauth/skStr.h"
+#include "keyauth/auth.hpp"
+
+std::string name = skCrypt("cs2").decrypt();                                                                // App name
+std::string ownerid = skCrypt("oE4g8i1Vq4").decrypt();                                                      // Account ID
+std::string secret = skCrypt("8fd8b7aade64ce87387132e9f56908a824d9ceeb525a1dbe97999767e4bf02ed").decrypt(); // Application secret (not used in latest C++ example)
+std::string version = skCrypt("1.0").decrypt();                                                             // Application version. Used for automatic downloads see video here https://www.youtube.com/watch?v=kW195PLCBKs
+std::string url = skCrypt("https://keyauth.win/api/1.3/").decrypt();                                        // change if using KeyAuth custom domains feature
+std::string path = skCrypt("").decrypt();                                                                   // (OPTIONAL) see tutorial here https://www.youtube.com/watch?v=I9rxt821gMk&t=1s
+
+
+KeyAuth::api KeyAuthApp(name, ownerid, version, url, path);
+
+
 // Main code
 int APIENTRY WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 {
@@ -75,11 +89,18 @@ int APIENTRY WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
             static int init = false;
             if (!init) {
                 ui::init(g_pd3dDevice);
+
+                KeyAuthApp.init();
+                if (!KeyAuthApp.response.success)
+                {
+                    globals.fail_message = KeyAuthApp.response.message;
+                    globals.form_state = failed;
+                }
+
                 init = true;
             }
-            else {
-                ui::render();
-            }
+
+            ui::render(KeyAuthApp);
         }
         ImGui::EndFrame();
 
