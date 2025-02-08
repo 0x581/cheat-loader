@@ -3,17 +3,14 @@
 #include <iostream>
 
 constexpr auto DisableOwnerCheck = true;
+
+enum ui_status { login, login_loading, main, loading_product, loaded_product, failed };
+
 class c_globals {
 public:
+	ui_status form_state;
 	bool active = true;
 	char key[255] = "key";
-	bool login_form = true;
-	bool login_loading = false;
-	bool main_form = false;
-	bool loading_product = false;
-	bool loaded_product = false;
-	bool checked_connection = true;
-	bool failed = false;
 	bool initialized_new_window_name = false;
 	bool loaded_successfull = false;
 	std::string fail_message = "";

@@ -7,8 +7,6 @@
 #include "../keyauth/skStr.h"
 #include "../keyauth/auth.hpp"
 
-using namespace KeyAuth;
-
 std::string name = skCrypt("cs2").decrypt(); // App name
 std::string ownerid = skCrypt("oE4g8i1Vq4").decrypt(); // Account ID
 std::string secret = skCrypt("8fd8b7aade64ce87387132e9f56908a824d9ceeb525a1dbe97999767e4bf02ed").decrypt(); // Application secret (not used in latest C++ example)
@@ -17,7 +15,7 @@ std::string url = skCrypt("https://keyauth.win/api/1.3/").decrypt(); // change i
 std::string path = skCrypt("").decrypt(); // (OPTIONAL) see tutorial here https://www.youtube.com/watch?v=I9rxt821gMk&t=1s
 
 
-api KeyAuthApp(name, ownerid, version, url, path);
+KeyAuth::api KeyAuthApp(name, ownerid, version, url, path);
 
 
 
@@ -65,11 +63,213 @@ void TextCentered(std::string text) {
     ImGui::PopTextWrapPos();
 }
 
-bool IsInternetConnected() {
-    // its a ghetto method but idc tbh, also needs admin rights
-    int result = system("ping -c 1 google.com");
-    return result == 0;
+
+void ui::renderLogin(KeyAuth::api& KeyAuthApp)
+{
+    int status_width = ImGui::CalcTextSize("KEY").x * 0.5;
+    ImGui::SetCursorPos(ImVec2(200 - status_width, 70));
+    ImGui::Text("KEY");
+
+
+    ImGui::SetCursorPos(ImVec2(60, 110));
+    ImGui::InputText("", globals.key, IM_ARRAYSIZE(globals.key));
+
+    //key_input = globals.key;
+
+
+    ImGui::SetCursorPos(ImVec2(60, 150));
+    if (ImGui::Button("LOGIN", ImVec2(260, 20))) {
+        KeyAuthApp.license(globals.key);  // Führt die Methode aus, aber speichert nichts in einer Variablen
+        if (KeyAuthApp.response.success) {
+            globals.form_state = main;
+        }
+        else
+        {
+            globals.fail_message = KeyAuthApp.response.message;
+            globals.form_state = failed;
+        }
+    }
 }
+
+
+void ui::renderMain(KeyAuth::api& KeyAuthApp)
+{
+    static bool check_started = true;
+    if (!check_started)
+    {
+        /*
+       * Do NOT remove this checkAuthenticated() function.
+       * It protects you from cracking, it would be NOT be a good idea to remove it
+       */
+        std::thread run(checkAuthenticated, ownerid);
+        // do NOT remove checkAuthenticated(), it MUST stay for security reasons
+        std::thread check(sessionStatus); // do NOT remove this function either.
+
+        check_started = true;
+    }
+
+    auto p = ImGui::GetWindowPos();
+    ImGuiContext& g = *GImGui;
+    ImFont* font = g.Font;
+    // Convert to std::string and concatenate
+
+    window_title = "https://discord.gg/96Xpa8XX4t | Merkur loader";
+
+
+
+    //ImGui::SetCursorPos(ImVec2(10, 25));
+    //ImGui::GetWindowDrawList()->AddRectFilled(ImVec2(p.x + 15, p.y + 35), ImVec2(p.x + 205, p.y + 180), ImColor(0, 0, 0, int(55)), 0);
+    //ImGui::GetWindowDrawList()->AddRect(ImVec2(p.x + 15, p.y + 35), ImVec2(p.x + 205, p.y + 180), ImColor(97, 173, 255, int(25)), 0);
+
+    // Products tab
+    const char* items[] = { "cs2", "product 2", "product 3" };
+    static int item_current = 0;
+    ImGui::SetCursorPos(ImVec2(15, 30));
+    ImGui::Text("Products");
+    ImGui::SetCursorPos(ImVec2(15, 50));
+    ImGui::ListBox("", &item_current, items, IM_ARRAYSIZE(items), 4);
+    ImGui::GetWindowDrawList()->AddRect(ImVec2(p.x + 15, p.y + 50), ImVec2(p.x + 185, p.y + 145), ImColor(97, 173, 255, int(25)), 0);
+
+    // Load tab
+    ImGui::SetCursorPos(ImVec2(200, 30));
+    ImGui::Text("Load");
+    ImGui::GetWindowDrawList()->AddRectFilled(ImVec2(p.x + 200, p.y + 50), ImVec2(p.x + 385, p.y + 145), ImColor(19, 19, 19, int(255)), 0);
+    ImGui::GetWindowDrawList()->AddRect(ImVec2(p.x + 200, p.y + 50), ImVec2(p.x + 385, p.y + 145), ImColor(97, 173, 255, int(25)), 0);
+    std::string current_product = "";
+    const char* selectedText = items[item_current];
+    current_product = selectedText;
+    ImGui::SetCursorPos(ImVec2(210, 60));
+    ImGui::Text(current_product.c_str());
+    ImGui::SetCursorPos(ImVec2(210, 80));
+    if (ImGui::Button("LOAD", ImVec2(165, 20))) {
+        globals.final_selected_product = item_current;
+        globals.form_state = loading_product;
+    }
+    ImGui::SetCursorPos(ImVec2(210, 110));
+    if (ImGui::Button("EXIT", ImVec2(165, 20))) {
+        exit(1337);
+    }
+
+    // Information tab
+    ImGui::SetCursorPos(ImVec2(15, 160));
+    ImGui::Text("Information");
+    ImGui::GetWindowDrawList()->AddRectFilled(ImVec2(p.x + 15, p.y + 35 + 35 + 180 + 30), ImVec2(p.x + 385, p.y + 180), ImColor(19, 19, 19, int(255)), 0);
+    ImGui::GetWindowDrawList()->AddRect(ImVec2(p.x + 15, p.y + 35 + 35 + 180 + 30), ImVec2(p.x + 385, p.y + 180), ImColor(97, 173, 255, int(25)), 0);
+    ImGui::SetCursorPos(ImVec2(25, 190));
+    ImGui::Text("Status: ");
+    int status_width = ImGui::CalcTextSize("Status: ").x;
+    ImColor status_color;
+    ImColor(89, 255, 0, int(255));//green
+    ImColor(201, 204, 0, int(255));//yelllow
+    ImColor(200, 0, 0, int(255));//red
+    // ofc u should initialize strings as globals.version / globals.last_uptade / globals.status in loading screen or somewhere else... this is a ghetto example
+    if (item_current == 0)
+    {
+        status_color = ImColor(89, 255, 0, int(255));
+        globals.status = "undetected"; // ofc ;)
+        globals.last_uptade = "29.09.2023";
+        globals.version = "3.3.0";
+    }
+    else if (item_current == 1)
+    {
+        status_color = ImColor(201, 204, 0, int(255));
+        globals.status = "testing";
+        globals.last_uptade = "12.09.2023";
+        globals.version = "0.9.7";
+    }
+    else if (item_current == 2)
+    {
+        status_color = ImColor(200, 0, 0, int(255));
+        globals.status = "detected";
+        globals.last_uptade = "15.09.2023";
+        globals.version = "0.2.7";
+    }
+    else // and so on...
+    {
+        globals.status = "unknown";
+        globals.last_uptade = "unknown";
+        globals.version = "unknown";
+        status_color = ImColor(252, 186, 3, int(255));
+    }
+    ImGui::GetWindowDrawList()->AddText(font, 13, ImVec2(p.x + 25 + status_width, p.y + 190), status_color, globals.status.c_str());
+    ImGui::SetCursorPos(ImVec2(25, 210));
+
+
+    ImGui::Text("Last Update: ");
+    int last_update_width = ImGui::CalcTextSize("Last Update: ").x;
+    ImGui::GetWindowDrawList()->AddText(font, 13, ImVec2(p.x + 25 + last_update_width, p.y + 210), ImColor(99, 182, 255, int(255)), globals.last_uptade.c_str());
+    ImGui::SetCursorPos(ImVec2(25, 230));
+    ImGui::Text("Version: ");
+    int version_width = ImGui::CalcTextSize("Version: ").x;
+    ImGui::GetWindowDrawList()->AddText(font, 13, ImVec2(p.x + 25 + version_width, p.y + 230), ImColor(99, 182, 255, int(255)), globals.version.c_str());
+    ImGui::SetCursorPos(ImVec2(25, 250));
+    ImGui::Text("Connection: ");
+    int connection_width = ImGui::CalcTextSize("Connection: ").x;
+    ImGui::GetWindowDrawList()->AddText(font, 13, ImVec2(p.x + 25 + connection_width, p.y + 250), ImColor(89, 255, 0, int(255)), globals.connection_message.c_str());
+}
+
+
+void ui::renderLoadingProduct(KeyAuth::api& KeyAuthApp)
+{
+    ImGuiStyle& style = ImGui::GetStyle();
+
+    static float
+        progress = 0.0f,
+        progress_dir = 1.0f,
+        limitter = 1.0f;
+
+    if (progress < limitter)
+    {
+        ImGui::SetCursorPos(ImVec2(7, 130));
+        style.Colors[ImGuiCol_PlotHistogram] = ImVec4(0.26f, 0.59f, 0.98f, 0.67f);
+        ImGui::ProgressBar(progress, ImVec2(385.0f, 20.0f));
+
+        if (progress < 0.25 && globals.final_selected_product != 0)
+        {
+            progress += progress_dir * 0.5f * ImGui::GetIO().DeltaTime;
+            globals.fail_message = "Product is currently under maintenance";
+            globals.tick_count2++;
+
+            if (globals.tick_count2 > 50)
+                globals.form_state = failed;
+        }
+        else
+            progress += progress_dir * 0.5f * ImGui::GetIO().DeltaTime;
+    }
+    else
+    {
+        if (globals.final_selected_product == 0)
+        {
+            if (!globals.form_state == loaded_product)
+            {
+            }
+
+            globals.form_state = loaded_product;
+            TextCentered("Loaded!");
+            globals.tick_count++;
+
+            if (globals.tick_count > 500)
+                exit(1337);
+        }
+    }
+}
+
+
+void ui::renderError(KeyAuth::api& KeyAuthApp)
+{
+    TextCentered(globals.fail_message.c_str());
+
+    using std::chrono::time_point;
+    using std::chrono::steady_clock;
+    using std::chrono::high_resolution_clock;
+    using std::chrono::seconds;
+
+    static time_point<steady_clock> exit_time = high_resolution_clock::now() + seconds(5);
+
+    if (high_resolution_clock::now() > exit_time)
+        exit(1337);
+}
+
 
 void ui::render() {
     if (!globals.active) return;
@@ -86,245 +286,26 @@ void ui::render() {
         first = false;
     }
 
-
     ImGui::SetNextWindowPos(ImVec2(window_pos.x, window_pos.y), ImGuiCond_Once);
     ImGui::SetNextWindowSize(ImVec2(window_size.x, window_size.y));
     ImGui::SetNextWindowBgAlpha(1.0f);
 
     ImGui::Begin(window_title, &globals.active, window_flags);
     {
-        ImGuiStyle& style = ImGui::GetStyle();
-
-        if (!globals.checked_connection)
+        switch (globals.form_state)
         {
-            if (IsInternetConnected()) {
-                globals.connection_message = ("Connected");
-            }
-            else {
-                globals.connection_message = ("Failed to check connection!");
-                globals.fail_message = "Failed to check connection!";
-                globals.failed = true;
-            }
-            globals.checked_connection = true;
-        }
-
-        /*if (globals.failed)
-        {
-            TextCentered(globals.fail_message.c_str());
-
-            globals.tick_count++;
-
-            if (globals.tick_count > 500)
-                exit(1337);
-        }*/
-        
-
-        
-
-        if (globals.login_form && !globals.failed)
-        {
-            int status_width = ImGui::CalcTextSize("KEY").x * 0.5;
-            ImGui::SetCursorPos(ImVec2(200 - status_width, 70));
-            ImGui::Text("KEY");
-
-            
-            ImGui::SetCursorPos(ImVec2(60, 110));
-            ImGui::InputText("", globals.key, IM_ARRAYSIZE(globals.key));
-
-            //KeyAuthApp.license(globals.key);  // Führt die Methode aus, aber speichert nichts in einer Variablen
-
-            std::string username, password, key, TfaCode;
-
-            
-            //key_input = globals.key;
-            
-
-            ImGui::SetCursorPos(ImVec2(60, 150));
-            if (ImGui::Button("LOGIN", ImVec2(260, 20))) {
-                if (KeyAuthApp.response.success) {
-                    // Erfolgreiche Authentifizierung
-                    globals.login_form = false;
-                    globals.login_loading = true;
-                }
-                else
-                {
-                    globals.fail_message = KeyAuthApp.response.message;
-                    globals.failed = true;
-                }
-            }
-           
-        }
-
-        else if (globals.login_loading && !globals.failed)
-        {
-            static float 
-                progress = 0.0f, 
-                progress_dir = 1.0f, 
-                limitter = 1.0f;
-
-            if (progress < limitter)
-                progress += progress_dir * 3.5f * ImGui::GetIO().DeltaTime;
-            else
-            {
-                globals.main_form = true;
-                globals.login_loading = false;
-            }
-
-            ImGui::SetCursorPos(ImVec2(7, 130));
-
-            style.Colors[ImGuiCol_PlotHistogram] = ImVec4(0.26f, 0.59f, 0.98f, 0.67f);
-            ImGui::ProgressBar(progress, ImVec2(385.0f, 20.0f));
-        }
-        else if (globals.main_form && !globals.failed)
-        {
-            /*
-           * Do NOT remove this checkAuthenticated() function.
-           * It protects you from cracking, it would be NOT be a good idea to remove it
-           */
-            std::thread run(checkAuthenticated, ownerid);
-            // do NOT remove checkAuthenticated(), it MUST stay for security reasons
-            std::thread check(sessionStatus); // do NOT remove this function either.
-
-            auto p = ImGui::GetWindowPos();
-            ImGuiContext& g = *GImGui;
-            ImFont* font = g.Font;
-            // Convert to std::string and concatenate
-            
-            window_title = "https://discord.gg/96Xpa8XX4t | Merkur loader";
-
-            //ImGui::SetCursorPos(ImVec2(10, 25));
-            //ImGui::GetWindowDrawList()->AddRectFilled(ImVec2(p.x + 15, p.y + 35), ImVec2(p.x + 205, p.y + 180), ImColor(0, 0, 0, int(55)), 0);
-            //ImGui::GetWindowDrawList()->AddRect(ImVec2(p.x + 15, p.y + 35), ImVec2(p.x + 205, p.y + 180), ImColor(97, 173, 255, int(25)), 0);
-
-            // Products tab
-            const char* items[] = { "cs2", "product 2", "product 3" };
-            static int item_current = 0;
-            ImGui::SetCursorPos(ImVec2(15, 30));
-            ImGui::Text("Products");
-            ImGui::SetCursorPos(ImVec2(15, 50));
-            ImGui::ListBox("", &item_current, items, IM_ARRAYSIZE(items), 4);
-            ImGui::GetWindowDrawList()->AddRect(ImVec2(p.x + 15, p.y + 50), ImVec2(p.x + 185, p.y + 145), ImColor(97, 173, 255, int(25)), 0);
-
-            // Load tab
-            ImGui::SetCursorPos(ImVec2(200, 30));
-            ImGui::Text("Load");
-            ImGui::GetWindowDrawList()->AddRectFilled(ImVec2(p.x + 200, p.y + 50), ImVec2(p.x + 385, p.y + 145), ImColor(19, 19, 19, int(255)), 0);
-            ImGui::GetWindowDrawList()->AddRect(ImVec2(p.x + 200, p.y + 50), ImVec2(p.x + 385, p.y + 145), ImColor(97, 173, 255, int(25)), 0);
-            std::string current_product = "";
-            const char* selectedText = items[item_current];
-            current_product = selectedText;
-            ImGui::SetCursorPos(ImVec2(210, 60));
-            ImGui::Text(current_product.c_str());
-            ImGui::SetCursorPos(ImVec2(210, 80));
-            if (ImGui::Button("LOAD", ImVec2(165, 20))) {
-                globals.final_selected_product = item_current;
-                globals.loading_product = true;
-                globals.main_form = false;
-            }
-            ImGui::SetCursorPos(ImVec2(210, 110));
-            if (ImGui::Button("EXIT", ImVec2(165, 20))) {
-                exit(1337);
-            }        
-
-            // Information tab
-            ImGui::SetCursorPos(ImVec2(15, 160));
-            ImGui::Text("Information");
-            ImGui::GetWindowDrawList()->AddRectFilled(ImVec2(p.x + 15, p.y + 35 + 35 + 180 + 30), ImVec2(p.x + 385, p.y + 180), ImColor(19, 19, 19, int(255)), 0);
-            ImGui::GetWindowDrawList()->AddRect(ImVec2(p.x + 15, p.y + 35 + 35 + 180 + 30), ImVec2(p.x + 385, p.y + 180), ImColor(97, 173, 255, int(25)), 0);
-            ImGui::SetCursorPos(ImVec2(25, 190));
-            ImGui::Text("Status: ");
-            int status_width = ImGui::CalcTextSize("Status: ").x;
-            ImColor status_color;
-            ImColor(89, 255, 0, int(255));//green
-            ImColor(201, 204, 0, int(255));//yelllow
-            ImColor(200, 0, 0, int(255));//red
-            // ofc u should initialize strings as globals.version / globals.last_uptade / globals.status in loading screen or somewhere else... this is a ghetto example
-            if (item_current == 0)
-            {
-                status_color = ImColor(89, 255, 0, int(255));
-                globals.status = "undetected"; // ofc ;)
-                globals.last_uptade = "29.09.2023";
-                globals.version = "3.3.0";
-            }
-            else if (item_current == 1)
-            {
-                status_color = ImColor(201, 204, 0, int(255));
-                globals.status = "testing";
-                globals.last_uptade = "12.09.2023";
-                globals.version = "0.9.7";
-            }
-            else if (item_current == 2)
-            {
-                status_color = ImColor(200, 0, 0, int(255));
-                globals.status = "detected";
-                globals.last_uptade = "15.09.2023";
-                globals.version = "0.2.7";
-            }
-            else // and so on...
-            {
-                globals.status = "unknown";
-                globals.last_uptade = "unknown";
-                globals.version = "unknown";
-                status_color = ImColor(252, 186, 3, int(255));
-            }
-            ImGui::GetWindowDrawList()->AddText(font, 13, ImVec2(p.x + 25 + status_width, p.y + 190), status_color, globals.status.c_str());
-            ImGui::SetCursorPos(ImVec2(25, 210));
-           
-
-            ImGui::Text("Last Update: ");
-            int last_update_width = ImGui::CalcTextSize("Last Update: ").x;
-            ImGui::GetWindowDrawList()->AddText(font, 13, ImVec2(p.x + 25 + last_update_width, p.y + 210), ImColor(99, 182, 255, int(255)), globals.last_uptade.c_str());
-            ImGui::SetCursorPos(ImVec2(25, 230));
-            ImGui::Text("Version: ");
-            int version_width = ImGui::CalcTextSize("Version: ").x;
-            ImGui::GetWindowDrawList()->AddText(font, 13, ImVec2(p.x + 25 + version_width, p.y + 230), ImColor(99, 182, 255, int(255)), globals.version.c_str());
-            ImGui::SetCursorPos(ImVec2(25, 250));
-            ImGui::Text("Connection: ");
-            int connection_width = ImGui::CalcTextSize("Connection: ").x;
-            ImGui::GetWindowDrawList()->AddText(font, 13, ImVec2(p.x + 25 + connection_width, p.y + 250), ImColor(89, 255, 0, int(255)), globals.connection_message.c_str());
-        }
-        else if (globals.loading_product && !globals.failed)
-        {
-            static float
-                progress = 0.0f,
-                progress_dir = 1.0f,
-                limitter = 1.0f;
-
-            if (progress < limitter)
-            {
-                ImGui::SetCursorPos(ImVec2(7, 130));
-                style.Colors[ImGuiCol_PlotHistogram] = ImVec4(0.26f, 0.59f, 0.98f, 0.67f);
-                ImGui::ProgressBar(progress, ImVec2(385.0f, 20.0f));
-
-                if (progress < 0.25 && globals.final_selected_product != 0)
-                {
-                    progress += progress_dir * 0.5f * ImGui::GetIO().DeltaTime;
-                    globals.fail_message = "Product is currently under maintenance";
-                    globals.tick_count2++;
-
-                    if (globals.tick_count2 > 50)
-                        globals.failed = true;
-                }
-                else
-                    progress += progress_dir * 0.5f * ImGui::GetIO().DeltaTime;
-            }      
-            else
-            {
-                if (globals.final_selected_product == 0)
-                {
-                    if (!globals.loaded_product)
-                    {
-                    }
-
-                    globals.loaded_product = true;
-                    TextCentered("Loaded!");
-                    globals.tick_count++;
-
-                    if (globals.tick_count > 500)
-                        exit(1337);
-                }
-            }
-
+        case failed:
+            renderError(KeyAuthApp);
+            break;
+        case login:
+            renderLogin(KeyAuthApp);
+            break;
+        case main:
+            renderMain(KeyAuthApp);
+            break;
+        case loading_product:
+            renderLoadingProduct(KeyAuthApp);
+            break;
         }
     }
     ImGui::End();

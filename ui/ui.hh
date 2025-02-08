@@ -1,9 +1,15 @@
 #pragma once
 #include <d3d9.h>
 #include "../imgui/imgui.h"
+#include "../keyauth/auth.hpp"
+
 
 namespace ui {
 	void init(LPDIRECT3DDEVICE9);
+	void renderLogin(KeyAuth::api &KeyAuthApi);
+	void renderMain(KeyAuth::api& KeyAuthApp);
+	void renderLoadingProduct(KeyAuth::api& KeyAuthApp);
+	void renderError(KeyAuth::api& KeyAuthApp);
 	void render();
 }
 
