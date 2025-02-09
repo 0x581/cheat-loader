@@ -45,16 +45,18 @@ void ui::renderLogin(KeyAuth::api& KeyAuthApp)
     TextCentered(skCrypt("KEY").decrypt(), ImVec2(window_size.x * 0.5f, window_size.y * 0.25f));
 
     ImGui::PushItemWidth(window_size.x * 0.7f);
-
-    ImGui::SetCursorPos(ImVec2(window_size.x * 0.15f, window_size.y * 0.366666f));
-    ImGui::InputText("", globals.key, IM_ARRAYSIZE(globals.key));
-
+    {
+        ImGui::SetCursorPos(ImVec2(window_size.x * 0.15f, window_size.y * 0.366666f));
+        ImGui::InputText("", globals.key, IM_ARRAYSIZE(globals.key));
+    }
     ImGui::PopItemWidth();
+
+    const auto input_height = UIDefines::font_size + ImGui::GetStyle().FramePadding.y * 2.0f;
 
     static std::atomic<bool> license_done = false;
 
     ImGui::SetCursorPos(ImVec2(window_size.x * 0.15f, window_size.y * 0.5f));
-    if (ImGui::Button(skCrypt("LOGIN"), ImVec2(window_size.x * 0.7f, window_size.y / 15))) {
+    if (ImGui::Button(skCrypt("LOGIN"), ImVec2(window_size.x * 0.7f, input_height))) {
         static std::thread license_thread{
             [&]() {
                 KeyAuthApp.license(globals.key);
@@ -97,7 +99,7 @@ void ui::renderMain(KeyAuth::api& KeyAuthApp)
 
     globals.products[0] = ProductInfo{
         .valid = true,
-        .name = "CounterStrike 2 Cheat",
+        .name = "CounterStrike 2",
         .status = undetected,
         .version = "0.1.0",
         .last_update = "05.02.2025",
@@ -141,7 +143,7 @@ void ui::renderMain(KeyAuth::api& KeyAuthApp)
 
     //  Products tab
     ImGui::SetCursorPos(ImVec2(window_size.x * 0.0375f, window_size.y * 0.1f));
-    ImGui::Text(skCrypt("Products"));
+    ImGui::Text(skCrypt("Cheats"));
 
     ImGui::SetCursorPos(ImVec2(window_size.x * 0.0375f, window_size.y * 0.16666f));
 
