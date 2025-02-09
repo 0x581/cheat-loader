@@ -23,6 +23,6 @@ namespace ui {
 namespace ui {
 	inline ImVec2 screen_res{ 000, 000 };
 	inline ImVec2 window_pos{ 0, 0 };
-	inline ImVec2 window_size{ 450 * UIDefines::window_scaling, 360 * UIDefines::window_scaling };
+	inline ImVec2 window_size{ 480 * UIDefines::window_scaling, 360 * UIDefines::window_scaling };
 	inline DWORD  window_flags = ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoScrollbar;
 }
