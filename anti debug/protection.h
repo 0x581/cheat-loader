@@ -22,6 +22,18 @@ inline bool hide_thread(HANDLE thread)
 	else
 		return true;
 }
+inline int OutputDbgString()
+{
+	SetLastError(0);
+	// Send a string to the debugger
+	OutputDebugStringA("Hello, debugger");
+	if (GetLastError() != 0)
+	{
+		exit(1);
+	}
+	return 0;
+}
+
 
 inline int thread_context() // look for debuggers hiding in the thread context 
 {
@@ -75,6 +87,7 @@ inline bool debug_perms_check()
 void Protection_Loop()
 {
 	hide_thread(LI_FN(GetCurrentThread).forwarded_safe_cached());
+	OutputDbgString();
 	if (thread_context()) *(uintptr_t*)(0) = 1;
 	if (remote_is_present()) *(uintptr_t*)(0) = 1;
 	if (is_debugger_present()) *(uintptr_t*)(0) = 1;
