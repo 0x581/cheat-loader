@@ -2,8 +2,12 @@
 #include <filesystem> 
 #include <string> 
 #include <fstream>
-#include "skStr.h"
+
 #include "json.hpp"
+
+#include "skStr.h"
+#include "auth.hpp"
+
 using json = nlohmann::json;
 
 std::string ReadFromJson(std::string path, std::string section) 
@@ -54,5 +58,22 @@ void checkAuthenticated(std::string ownerid) {
 			exit(13);
 		}
 		Sleep(1000); // thread interval
+	}
+}
+
+void sessionStatus(KeyAuth::api& KeyAuthApp) {
+	KeyAuthApp.check(true); // do NOT specify true usually, it is slower and will get you blocked from API
+	if (!KeyAuthApp.response.success) {
+		exit(0);
+	}
+
+	if (KeyAuthApp.response.isPaid) {
+		while (true) {
+			Sleep(20000); // this MUST be included or else you get blocked from API
+			KeyAuthApp.check();
+			if (!KeyAuthApp.response.success) {
+				exit(0);
+			}
+		}
 	}
 }

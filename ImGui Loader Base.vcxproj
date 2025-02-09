@@ -148,6 +148,7 @@
     <ClInclude Include="anti debug\antidbg.h" />
     <ClInclude Include="anti debug\lazy.h" />
     <ClInclude Include="anti debug\protection.h" />
+    <ClInclude Include="defines.hpp" />
     <ClInclude Include="globals.hh" />
     <ClInclude Include="keyauth\auth.hpp" />
     <ClInclude Include="keyauth\json.hpp" />

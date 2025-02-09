@@ -1,81 +1,60 @@
 #include "ui.hh"
-#include "../globals.hh"
-#include "../imgui/imgui.h"
-#include "../imgui/imgui_internal.h"
+
 #include <thread>
+
+#include "../imgui/imgui_internal.h"
+
+#include "../globals.hh"
 #include "../keyauth/utils.hpp"
-#include "../keyauth/skStr.h"
-#include "../keyauth/auth.hpp"
-
-std::string name = skCrypt("cs2").decrypt(); // App name
-std::string ownerid = skCrypt("oE4g8i1Vq4").decrypt(); // Account ID
-std::string secret = skCrypt("8fd8b7aade64ce87387132e9f56908a824d9ceeb525a1dbe97999767e4bf02ed").decrypt(); // Application secret (not used in latest C++ example)
-std::string version = skCrypt("1.0").decrypt(); // Application version. Used for automatic downloads see video here https://www.youtube.com/watch?v=kW195PLCBKs
-std::string url = skCrypt("https://keyauth.win/api/1.3/").decrypt(); // change if using KeyAuth custom domains feature
-std::string path = skCrypt("").decrypt(); // (OPTIONAL) see tutorial here https://www.youtube.com/watch?v=I9rxt821gMk&t=1s
 
 
-KeyAuth::api KeyAuthApp(name, ownerid, version, url, path);
+static void TextCentered(const char* text, ImVec2 position)
+{
+    ImVec2 windowSize = ImGui::GetWindowSize();
+    ImVec2 textSize = ImGui::CalcTextSize(text);
 
+    float x_pos = position.x - textSize.x * 0.5f;
+    float y_pos = position.y - textSize.y * 0.5f;
 
-
-void sessionStatus() {
-    KeyAuthApp.check(true); // do NOT specify true usually, it is slower and will get you blocked from API
-    if (!KeyAuthApp.response.success) {
-        exit(0);
+    float min_x_pos = 20.0f;
+    if (x_pos <= min_x_pos) {
+        x_pos = min_x_pos;
     }
 
-    if (KeyAuthApp.response.isPaid) {
-        while (true) {
-            Sleep(20000); // this MUST be included or else you get blocked from API
-            KeyAuthApp.check();
-            if (!KeyAuthApp.response.success) {
-                exit(0);
-            }
-        }
+    float min_y_pos = 20.0f;
+    if (y_pos <= min_y_pos) {
+        y_pos = min_y_pos;
     }
+
+    ImGui::SetCursorPos(ImVec2(x_pos, y_pos));
+
+    ImGui::PushTextWrapPos(windowSize.x - x_pos);
+    ImGui::TextWrapped(text);
+    ImGui::PopTextWrapPos();
 }
 
-void TextCentered(std::string text) {
-    ImVec2 windowSize = ImGui::GetWindowSize();
-    ImVec2 textSize = ImGui::CalcTextSize(text.c_str());
 
-    float horizontalIndentation = (windowSize.x - textSize.x) * 0.5f;
-    float verticalIndentation = (windowSize.y - textSize.y) * 0.5f;
-
-    float minHorizontalIndentation = 20.0f;
-    if (horizontalIndentation <= minHorizontalIndentation) {
-        horizontalIndentation = minHorizontalIndentation;
-    }
-
-    float minVerticalIndentation = 20.0f;
-    if (verticalIndentation <= minVerticalIndentation) {
-        verticalIndentation = minVerticalIndentation;
-    }
-
-    ImGui::SetCursorPosX(horizontalIndentation);
-    ImGui::SetCursorPosY(verticalIndentation);
-
-    ImGui::PushTextWrapPos(windowSize.x - horizontalIndentation);
-    ImGui::TextWrapped(text.c_str());
-    ImGui::PopTextWrapPos();
+static void TextCentered(const std::string text, ImVec2 position)
+{
+    TextCentered(text.c_str(), position);
 }
 
 
 void ui::renderLogin(KeyAuth::api& KeyAuthApp)
 {
-    int status_width = ImGui::CalcTextSize("KEY").x * 0.5;
-    ImGui::SetCursorPos(ImVec2(200 - status_width, 70));
-    ImGui::Text(skCrypt("KEY").decrypt());
+    TextCentered(skCrypt("KEY").decrypt(), ImVec2(window_size.x * 0.5f, window_size.y * 0.25f));
 
+    ImGui::PushItemWidth(window_size.x * 0.7f);
 
-    ImGui::SetCursorPos(ImVec2(60, 110));
+    ImGui::SetCursorPos(ImVec2(window_size.x * 0.15f, window_size.y * 0.366666f));
     ImGui::InputText("", globals.key, IM_ARRAYSIZE(globals.key));
+
+    ImGui::PopItemWidth();
 
     static std::atomic<bool> license_done = false;
 
-    ImGui::SetCursorPos(ImVec2(60, 150));
-    if (ImGui::Button(skCrypt("LOGIN").decrypt(), ImVec2(260, 20))) {
+    ImGui::SetCursorPos(ImVec2(window_size.x * 0.15f, window_size.y * 0.5f));
+    if (ImGui::Button(skCrypt("LOGIN"), ImVec2(window_size.x * 0.7f, window_size.y / 15))) {
         static std::thread license_thread{
             [&]() {
                 KeyAuthApp.license(globals.key);
@@ -92,7 +71,7 @@ void ui::renderLogin(KeyAuth::api& KeyAuthApp)
     }
     else
     {
-        globals.fail_message = KeyAuthApp.response.message;
+        globals.error_message = KeyAuthApp.response.message;
         globals.form_state = failed;
     }
 }
@@ -107,156 +86,155 @@ void ui::renderMain(KeyAuth::api& KeyAuthApp)
        * Do NOT remove this checkAuthenticated() function.
        * It protects you from cracking, it would be NOT be a good idea to remove it
        */
-        std::thread run(checkAuthenticated, ownerid);
+        std::thread run(checkAuthenticated, KeyAuthApp.ownerid);
+
         // do NOT remove checkAuthenticated(), it MUST stay for security reasons
-        std::thread check(sessionStatus); // do NOT remove this function either.
+        std::thread check(sessionStatus, std::ref(KeyAuthApp)); // do NOT remove this function either.
 
         check_started = true;
+    }
+    // Products tab
+
+    globals.products[0] = ProductInfo{
+        .valid = true,
+        .name = "CounterStrike 2 Cheat",
+        .status = undetected,
+        .version = "0.1.0",
+        .last_update = "05.02.2025",
+        .key = globals.key,
+    };
+
+    globals.products[1] = ProductInfo{
+        .valid = true,
+        .name = "Product placeholder 1",
+        .status = detected,
+        .version = "1.0.2",
+        .last_update = "04.01.2024",
+        .key = "No valid key provided",
+    };
+
+    globals.products[2] = ProductInfo{
+        .valid = true,
+        .name = "Product placeholder 2",
+        .status = testing,
+        .version = "1.2.1",
+        .last_update = "05.07.2024",
+        .key = "No valid key provided",
+    };
+
+    int product_count = 0;
+
+    for (; product_count < 16 && globals.products[product_count].valid; ++product_count);
+
+    char const** items = new char const* [product_count];
+    
+    for (int i = 0; i < product_count; i++)
+    {
+        items[i] = globals.products[i].name.c_str();
     }
 
     auto p = ImGui::GetWindowPos();
     ImGuiContext& g = *GImGui;
     ImFont* font = g.Font;
-    // Convert to std::string and concatenate
 
-    window_title = "Merkur loader";
+    auto& drawlist = *ImGui::GetWindowDrawList();
 
+    //  Products tab
+    ImGui::SetCursorPos(ImVec2(window_size.x * 0.0375f, window_size.y * 0.1f));
+    ImGui::Text(skCrypt("Products"));
 
+    ImGui::SetCursorPos(ImVec2(window_size.x * 0.0375f, window_size.y * 0.16666f));
 
-    //ImGui::SetCursorPos(ImVec2(10, 25));
-    //ImGui::GetWindowDrawList()->AddRectFilled(ImVec2(p.x + 15, p.y + 35), ImVec2(p.x + 205, p.y + 180), ImColor(0, 0, 0, int(55)), 0);
-    //ImGui::GetWindowDrawList()->AddRect(ImVec2(p.x + 15, p.y + 35), ImVec2(p.x + 205, p.y + 180), ImColor(97, 173, 255, int(25)), 0);
+    ImGui::ListBox("", &globals.selectedProduct, items, product_count, 4);
 
-    // Products tab
-    const char* items[] = { "cs2", "product 2", "product 3"};
-    static int item_current = 0;
-    ImGui::SetCursorPos(ImVec2(15, 30));
-    ImGui::Text(skCrypt("Products").decrypt());
-    ImGui::SetCursorPos(ImVec2(15, 50));
-    ImGui::ListBox("", &item_current, items, IM_ARRAYSIZE(items), 4);
     ImGui::GetWindowDrawList()->AddRect(ImVec2(p.x + 15, p.y + 50), ImVec2(p.x + 185, p.y + 145), ImColor(97, 173, 255, int(25)), 0);
 
     // Load tab
     ImGui::SetCursorPos(ImVec2(200, 30));
-    ImGui::Text(skCrypt("Load").decrypt());
+    ImGui::Text(skCrypt("Load"));
+
     ImGui::GetWindowDrawList()->AddRectFilled(ImVec2(p.x + 200, p.y + 50), ImVec2(p.x + 385, p.y + 145), ImColor(19, 19, 19, int(255)), 0);
     ImGui::GetWindowDrawList()->AddRect(ImVec2(p.x + 200, p.y + 50), ImVec2(p.x + 385, p.y + 145), ImColor(97, 173, 255, int(25)), 0);
-    std::string current_product = "";
-    const char* selectedText = items[item_current];
-    current_product = selectedText;
+
+    ProductInfo& selectedProduct = globals.products[globals.selectedProduct];
+
     ImGui::SetCursorPos(ImVec2(210, 60));
-    ImGui::Text(current_product.c_str());
+    ImGui::Text(selectedProduct.name.c_str());
+
     ImGui::SetCursorPos(ImVec2(210, 80));
-    if (ImGui::Button(skCrypt("LOAD").decrypt(), ImVec2(165, 20))) {
-        globals.final_selected_product = item_current;
+    if (ImGui::Button(skCrypt("LOAD"), ImVec2(165, 20))) {
+        globals.final_selected_product = globals.selectedProduct;
         globals.form_state = loading_product;
     }
+
     ImGui::SetCursorPos(ImVec2(210, 110));
-    if (ImGui::Button(skCrypt("EXIT").decrypt(), ImVec2(165, 20))) {
+    if (ImGui::Button(skCrypt("EXIT"), ImVec2(165, 20))) {
         exit(1337);
     }
 
     // Information tab
     ImGui::SetCursorPos(ImVec2(15, 160));
-    ImGui::Text(skCrypt("Information").decrypt());
+    ImGui::Text(skCrypt("Information"));
+
     ImGui::GetWindowDrawList()->AddRectFilled(ImVec2(p.x + 15, p.y + 35 + 35 + 180 + 30), ImVec2(p.x + 385, p.y + 180), ImColor(19, 19, 19, int(255)), 0);
     ImGui::GetWindowDrawList()->AddRect(ImVec2(p.x + 15, p.y + 35 + 35 + 180 + 30), ImVec2(p.x + 385, p.y + 180), ImColor(97, 173, 255, int(25)), 0);
+
     ImGui::SetCursorPos(ImVec2(25, 190));
-    ImGui::Text(skCrypt("Status: ").decrypt());
-    int status_width = ImGui::CalcTextSize(skCrypt("Status: ").decrypt()).x;
-    ImColor status_color;
-    ImColor(89, 255, 0, int(255));//green
-    ImColor(201, 204, 0, int(255));//yelllow
-    ImColor(200, 0, 0, int(255));//red
-    // ofc u should initialize strings as globals.version / globals.last_uptade / globals.status in loading screen or somewhere else... this is a ghetto example
-    if (item_current == 0)
+    ImGui::Text("Status: ");
+    const auto status_width = ImGui::CalcTextSize(skCrypt("Status: ")).x;
+
+    std::string status_string = "";
+    ImColor status_color{ 0 };
+
+    switch (selectedProduct.status)
     {
-        status_color = ImColor(89, 255, 0, int(255));
-        globals.status = skCrypt("undetected").decrypt(); // ofc ;)
-        globals.last_update = skCrypt("29.09.2023").decrypt();
-        globals.version = skCrypt("3.3.0").decrypt();
+    case detected:
+        status_string = skCrypt("detected").decrypt();
+        status_color = ImColor(200, 0, 0, int(255));    //red
+        break;
+    case undetected:
+        status_string = skCrypt("undetected").decrypt();
+        status_color = ImColor(89, 255, 0, int(255));   //green
+        break;
+    case testing:
+        status_string = skCrypt("testing").decrypt();
+        status_color = ImColor(201, 204, 0, int(255));  //yellow
+        break;
+    default:
+        exit(6969);
     }
-    else if (item_current == 1)
-    {
-        status_color = ImColor(201, 204, 0, int(255));
-        globals.status = skCrypt("testing").decrypt();
-        globals.last_update = skCrypt("12.09.2023").decrypt();
-        globals.version = skCrypt("0.9.7").decrypt();
-    }
-    else if (item_current == 2)
-    {
-        status_color = ImColor(200, 0, 0, int(255));
-        globals.status = skCrypt("detected").decrypt();
-        globals.last_update = skCrypt("15.09.2023").decrypt();
-        globals.version = skCrypt("0.2.7").decrypt();
-    }
-    ImGui::GetWindowDrawList()->AddText(font, 13, ImVec2(p.x + 25 + status_width, p.y + 190), status_color, globals.status.c_str());
+
+
+    ImGui::GetWindowDrawList()->AddText(font, 13, ImVec2(p.x + 25 + status_width, p.y + 190), status_color, status_string.c_str());
     ImGui::SetCursorPos(ImVec2(25, 210));
 
 
-    ImGui::Text(skCrypt("Last Update: ").decrypt());
-    int last_update_width = ImGui::CalcTextSize("Last Update: ").x;
-    ImGui::GetWindowDrawList()->AddText(font, 13, ImVec2(p.x + 25 + last_update_width, p.y + 210), ImColor(99, 182, 255, int(255)), globals.last_update.c_str());
+    ImGui::Text(skCrypt("Last Update: "));
+    const auto last_update_width = ImGui::CalcTextSize(skCrypt("Last Update: ")).x;
+    ImGui::GetWindowDrawList()->AddText(font, 13, ImVec2(p.x + 25 + last_update_width, p.y + 210), ImColor(99, 182, 255, int(255)), selectedProduct.last_update.c_str());
     ImGui::SetCursorPos(ImVec2(25, 230));
-    ImGui::Text(skCrypt("Version: ").decrypt());
-    int version_width = ImGui::CalcTextSize("Version: ").x;
-    ImGui::GetWindowDrawList()->AddText(font, 13, ImVec2(p.x + 25 + version_width, p.y + 230), ImColor(99, 182, 255, int(255)), globals.version.c_str());
+    ImGui::Text(skCrypt("Version: "));
+    const auto version_width = ImGui::CalcTextSize(skCrypt("Version: ")).x;
+    ImGui::GetWindowDrawList()->AddText(font, 13, ImVec2(p.x + 25 + version_width, p.y + 230), ImColor(99, 182, 255, int(255)), selectedProduct.version.c_str());
     ImGui::SetCursorPos(ImVec2(25, 250));
-    ImGui::Text(skCrypt("Connection: ").decrypt());
-    int connection_width = ImGui::CalcTextSize("Connection: ").x;
-    ImGui::GetWindowDrawList()->AddText(font, 13, ImVec2(p.x + 25 + connection_width, p.y + 250), ImColor(89, 255, 0, int(255)), globals.connection_message.c_str());
+    //ImGui::Text("Connection: ");
+    //int connection_width = ImGui::CalcTextSize("Connection: ").x;
+    //ImGui::GetWindowDrawList()->AddText(font, 13, ImVec2(p.x + 25 + connection_width, p.y + 250), ImColor(89, 255, 0, int(255)), globals.connection_message.c_str());
+
+    delete[] items;
 }
 
 
 void ui::renderLoadingProduct(KeyAuth::api& KeyAuthApp)
 {
-    ImGuiStyle& style = ImGui::GetStyle();
-
-    static float
-        progress = 0.0f,
-        progress_dir = 1.0f,
-        limitter = 1.0f;
-
-    if (progress < limitter)
-    {
-        ImGui::SetCursorPos(ImVec2(7, 130));
-        style.Colors[ImGuiCol_PlotHistogram] = ImVec4(0.26f, 0.59f, 0.98f, 0.67f);
-        ImGui::ProgressBar(progress, ImVec2(385.0f, 20.0f));
-
-        if (progress < 0.25 && globals.final_selected_product != 0)
-        {
-            progress += progress_dir * 0.5f * ImGui::GetIO().DeltaTime;
-            globals.fail_message = skCrypt("Product is currently under maintenance").decrypt();
-            globals.tick_count2++;
-
-            if (globals.tick_count2 > 50)
-                globals.form_state = failed;
-        }
-        else
-            progress += progress_dir * 0.5f * ImGui::GetIO().DeltaTime;
-    }
-    else
-    {
-        if (globals.final_selected_product == 0)
-        {
-            if (!globals.form_state == loaded_product)
-            {
-            }
-
-            globals.form_state = loaded_product;
-            TextCentered(skCrypt("Loaded!").decrypt());
-            globals.tick_count++;
-
-            if (globals.tick_count > 500)
-                exit(1337);
-        }
-    }
+    globals.form_state = failed;
+    globals.error_message = "renderLoadingProduct not implemented";
 }
 
 
 void ui::renderError(KeyAuth::api& KeyAuthApp)
 {
-    TextCentered(globals.fail_message.c_str());
+    TextCentered(globals.error_message, window_size / 2.f);
 
     using std::chrono::time_point;
     using std::chrono::steady_clock;
@@ -270,45 +248,34 @@ void ui::renderError(KeyAuth::api& KeyAuthApp)
 }
 
 
-void ui::render() {
+void ui::render(KeyAuth::api& KeyAuthApp) {
     if (!globals.active) return;
-    static bool first = true;
-
-    if (first) {
-        KeyAuthApp.init();
-        if (!KeyAuthApp.response.success)
-        {
-            //std::cout << skCrypt("\n Status: ") << KeyAuthApp.response.message;
-            Sleep(1500);
-            exit(1);
-        }
-        first = false;
-    }
 
     ImGui::SetNextWindowPos(ImVec2(window_pos.x, window_pos.y), ImGuiCond_Once);
     ImGui::SetNextWindowSize(ImVec2(window_size.x, window_size.y));
     ImGui::SetNextWindowBgAlpha(1.0f);
 
     ImGui::Begin(window_title, &globals.active, window_flags);
+
+    switch (globals.form_state)
     {
-        switch (globals.form_state)
-        {
-        case failed:
-            renderError(KeyAuthApp);
-            break;
-        case login:
-            renderLogin(KeyAuthApp);
-            break;
-        case main:
-            renderMain(KeyAuthApp);
-            break;
-        case loading_product:
-            renderLoadingProduct(KeyAuthApp);
-            break;
-        }
+    case failed:
+        renderError(KeyAuthApp);
+        break;
+    case login:
+        renderLogin(KeyAuthApp);
+        break;
+    case main:
+        renderMain(KeyAuthApp);
+        break;
+    case loading_product:
+        renderLoadingProduct(KeyAuthApp);
+        break;
     }
+
     ImGui::End();
 }
+
 
 void ui::init(LPDIRECT3DDEVICE9 device) {
     dev = device;
