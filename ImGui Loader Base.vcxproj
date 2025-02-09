@@ -133,7 +133,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="anti debug\AntiDBG.cpp" />
+    <ClCompile Include="anti debug\anti_debug.cpp" />
     <ClCompile Include="ui\ui.cc" />
     <ClCompile Include="imgui\imgui.cpp" />
     <ClCompile Include="imgui\imgui_demo.cpp" />
@@ -146,6 +146,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="anti debug\antidbg.h" />
+    <ClInclude Include="anti debug\anti_debug.h" />
     <ClInclude Include="anti debug\lazy.h" />
     <ClInclude Include="anti debug\protection.h" />
     <ClInclude Include="defines.hpp" />
