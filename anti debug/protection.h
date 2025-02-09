@@ -79,5 +79,5 @@ void Protection_Loop()
 	if (remote_is_present()) *(uintptr_t*)(0) = 1;
 	if (is_debugger_present()) *(uintptr_t*)(0) = 1;
 	if (debug_perms_check()) *(uintptr_t*)(0) = 1;
-	std::this_thread::sleep_for(std::chrono::milliseconds(10)); 
+	std::this_thread::sleep_for(std::chrono::milliseconds(10));
 }

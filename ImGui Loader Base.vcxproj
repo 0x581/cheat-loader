@@ -133,6 +133,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="ui\custom_ui.cpp" />
     <ClCompile Include="ui\ui.cc" />
     <ClCompile Include="imgui\imgui.cpp" />
     <ClCompile Include="imgui\imgui_demo.cpp" />
@@ -152,6 +153,7 @@
     <ClInclude Include="keyauth\json.hpp" />
     <ClInclude Include="keyauth\skStr.h" />
     <ClInclude Include="keyauth\utils.hpp" />
+    <ClInclude Include="ui\custom_ui.hpp" />
     <ClInclude Include="ui\ui.hh" />
     <ClInclude Include="imgui\imconfig.h" />
     <ClInclude Include="imgui\imgui.h" />
