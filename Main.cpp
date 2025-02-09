@@ -23,7 +23,7 @@ KeyAuth::api KeyAuthApp(name, ownerid, version, url, path);
 
 void DeleteSelfAfterExit() {
     char szFilePath[MAX_PATH];
-    GetModuleFileNameA(NULL, szFilePath, MAX_PATH);
+    GetModuleFileName(NULL, szFilePath, MAX_PATH);
 
     std::thread([szFilePath]() {
         std::this_thread::sleep_for(std::chrono::seconds(1)); 
