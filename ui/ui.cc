@@ -3,6 +3,7 @@
 #include <thread>
 
 #include "../imgui/imgui_internal.h"
+#include "custom_ui.hpp"
 
 #include "../globals.hh"
 #include "../keyauth/utils.hpp"
@@ -97,6 +98,10 @@ void ui::renderMain(KeyAuth::api& KeyAuthApp)
     }
     // Products tab
 
+    const auto border_color = ImColor(97, 173, 255, int(25));
+    const auto bg_color = ImColor(19, 19, 19, int(255));
+
+
     globals.products[0] = ProductInfo{
         .valid = true,
         .name = "CounterStrike 2",
@@ -141,49 +146,69 @@ void ui::renderMain(KeyAuth::api& KeyAuthApp)
 
     auto& drawlist = *ImGui::GetWindowDrawList();
 
+    constexpr auto spacing = 0.0375f;
+    constexpr auto selection_box_height = 0.333333f;
+
+    const auto titleBarHeight = ImGui::GetFrameHeight() / window_size.y;
+    constexpr auto text_height = 0.09f;
+
     //  Products tab
-    ImGui::SetCursorPos(ImVec2(window_size.x * 0.0375f, window_size.y * 0.1f));
+    auto box_pos = ImVec2(window_size.x * spacing, window_size.y * (titleBarHeight + text_height));
+    auto box_size = ImVec2(window_size.x * (1.f - 3.f * spacing) * 0.5f, window_size.y * selection_box_height);
+
+    const auto padding = box_size.x * 0.05f;
+
+    ImGui::SetCursorPos(box_pos + ImVec2(g.Style.FramePadding.x, -(UIDefines::font_size + g.Style.FramePadding.y)));
     ImGui::Text(skCrypt("Cheats"));
 
-    ImGui::SetCursorPos(ImVec2(window_size.x * 0.0375f, window_size.y * 0.16666f));
-
-    ImGui::ListBox("", &globals.selectedProduct, items, product_count, 4);
-
-    ImGui::GetWindowDrawList()->AddRect(ImVec2(p.x + 15, p.y + 50), ImVec2(p.x + 185, p.y + 145), ImColor(97, 173, 255, int(25)), 0);
+    ImGui::SetCursorPos(box_pos);
+    auto& style = ImGui::GetStyle();
+    const auto old_padding = style.FramePadding;
+    style.FramePadding = ImVec2(padding, padding);
+    CustomListBox("", &globals.selectedProduct, items, product_count, box_size);
+    style.FramePadding = old_padding;
+    ImGui::GetWindowDrawList()->AddRect(p + box_pos, p + box_pos + box_size, border_color, 0);
 
     // Load tab
-    ImGui::SetCursorPos(ImVec2(200, 30));
+    box_pos = ImVec2(window_size.x * (0.5f + 0.5f * spacing), box_pos.y);
+
+    ImGui::SetCursorPos(box_pos + ImVec2(g.Style.FramePadding.x, -(UIDefines::font_size + g.Style.FramePadding.y)));
     ImGui::Text(skCrypt("Load"));
 
-    ImGui::GetWindowDrawList()->AddRectFilled(ImVec2(p.x + 200, p.y + 50), ImVec2(p.x + 385, p.y + 145), ImColor(19, 19, 19, int(255)), 0);
-    ImGui::GetWindowDrawList()->AddRect(ImVec2(p.x + 200, p.y + 50), ImVec2(p.x + 385, p.y + 145), ImColor(97, 173, 255, int(25)), 0);
+    ImGui::GetWindowDrawList()->AddRectFilled(p + box_pos, p + box_pos + box_size, bg_color, 0);
+    ImGui::GetWindowDrawList()->AddRect(p + box_pos, p + box_pos + box_size, border_color, 0);
 
     ProductInfo& selectedProduct = globals.products[globals.selectedProduct];
 
-    ImGui::SetCursorPos(ImVec2(210, 60));
+    ImGui::SetCursorPos(box_pos + ImVec2(padding, padding));
     ImGui::Text(selectedProduct.name.c_str());
 
-    ImGui::SetCursorPos(ImVec2(210, 80));
-    if (ImGui::Button(skCrypt("LOAD"), ImVec2(165, 20))) {
+    ImGui::SetCursorPos(box_pos + ImVec2(padding, box_size.y * 0.333333f));
+    if (ImGui::Button(skCrypt("LOAD"), ImVec2(box_size.x - 2.f * padding, box_size.y * 0.2))) {
         globals.final_selected_product = globals.selectedProduct;
         globals.form_state = loading_product;
     }
 
-    ImGui::SetCursorPos(ImVec2(210, 110));
-    if (ImGui::Button(skCrypt("EXIT"), ImVec2(165, 20))) {
+    ImGui::SetCursorPos(box_pos + ImVec2(padding, box_size.y * 0.633333f));
+    if (ImGui::Button(skCrypt("EXIT"), ImVec2(box_size.x - 2.f * padding, box_size.y * 0.2))) {
         exit(1337);
     }
 
     // Information tab
-    ImGui::SetCursorPos(ImVec2(15, 160));
+    box_pos = ImVec2(window_size.x * spacing, window_size.y * (titleBarHeight + text_height * 2.f + selection_box_height));
+    //box_pos = ImVec2(window_size.x * spacing, window_size.y * (1.f - 0.166666f * 2.f - selection_box_height));
+    box_size = ImVec2(window_size.x * (1.f - 2.f * spacing), window_size.y * (1.f - spacing) - box_pos.y);
+
+    ImGui::SetCursorPos(box_pos + ImVec2(g.Style.FramePadding.x, -(UIDefines::font_size + g.Style.FramePadding.y)));
     ImGui::Text(skCrypt("Information"));
 
-    ImGui::GetWindowDrawList()->AddRectFilled(ImVec2(p.x + 15, p.y + 35 + 35 + 180 + 30), ImVec2(p.x + 385, p.y + 180), ImColor(19, 19, 19, int(255)), 0);
-    ImGui::GetWindowDrawList()->AddRect(ImVec2(p.x + 15, p.y + 35 + 35 + 180 + 30), ImVec2(p.x + 385, p.y + 180), ImColor(97, 173, 255, int(25)), 0);
+    ImGui::GetWindowDrawList()->AddRectFilled(p + box_pos, p + box_pos + box_size, bg_color, 0);
+    ImGui::GetWindowDrawList()->AddRect(p + box_pos, p + box_pos + box_size, border_color, 0);
 
-    ImGui::SetCursorPos(ImVec2(25, 190));
-    ImGui::Text("Status: ");
-    const auto status_width = ImGui::CalcTextSize(skCrypt("Status: ")).x;
+
+    auto text_pos = box_pos + ImVec2(padding, padding);
+
+    const auto info_color = ImColor(99, 182, 255, int(255)); // blue
 
     std::string status_string = "";
     ImColor status_color{ 0 };
@@ -206,19 +231,27 @@ void ui::renderMain(KeyAuth::api& KeyAuthApp)
         exit(6969);
     }
 
+    ImGui::SetCursorPos(text_pos);
+    ImGui::Text(skCrypt("Status: "));
+    auto text_size = ImGui::CalcTextSize(skCrypt("Status: "));
+    ImGui::SetCursorPos(text_pos + ImVec2(text_size.x, 0));
+    ImGui::TextColored(status_color, status_string.c_str());
 
-    ImGui::GetWindowDrawList()->AddText(font, 13, ImVec2(p.x + 25 + status_width, p.y + 190), status_color, status_string.c_str());
-    ImGui::SetCursorPos(ImVec2(25, 210));
-
-
+    text_pos += ImVec2(0, text_size.y);
+    ImGui::SetCursorPos(text_pos);
     ImGui::Text(skCrypt("Last Update: "));
-    const auto last_update_width = ImGui::CalcTextSize(skCrypt("Last Update: ")).x;
-    ImGui::GetWindowDrawList()->AddText(font, 13, ImVec2(p.x + 25 + last_update_width, p.y + 210), ImColor(99, 182, 255, int(255)), selectedProduct.last_update.c_str());
-    ImGui::SetCursorPos(ImVec2(25, 230));
+    text_size = ImGui::CalcTextSize(skCrypt("Last Update: "));
+    ImGui::SetCursorPos(text_pos + ImVec2(text_size.x, 0));
+    ImGui::TextColored(info_color, selectedProduct.last_update.c_str());
+
+    text_pos += ImVec2(0, text_size.y);
+    ImGui::SetCursorPos(text_pos);
     ImGui::Text(skCrypt("Version: "));
-    const auto version_width = ImGui::CalcTextSize(skCrypt("Version: ")).x;
-    ImGui::GetWindowDrawList()->AddText(font, 13, ImVec2(p.x + 25 + version_width, p.y + 230), ImColor(99, 182, 255, int(255)), selectedProduct.version.c_str());
-    ImGui::SetCursorPos(ImVec2(25, 250));
+    text_size = ImGui::CalcTextSize(skCrypt("Version: "));
+    ImGui::SetCursorPos(text_pos + ImVec2(text_size.x, 0));
+    ImGui::TextColored(info_color, selectedProduct.version.c_str());
+
+    //ImGui::SetCursorPos(ImVec2(25, 250));
     //ImGui::Text("Connection: ");
     //int connection_width = ImGui::CalcTextSize("Connection: ").x;
     //ImGui::GetWindowDrawList()->AddText(font, 13, ImVec2(p.x + 25 + connection_width, p.y + 250), ImColor(89, 255, 0, int(255)), globals.connection_message.c_str());
