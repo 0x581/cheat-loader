@@ -5,7 +5,7 @@
 namespace UIDefines
 {
 	constexpr auto font_path = "fonts/ProggyVector-Regular.ttf";
-	constexpr auto font_size = 13.f;
+	constexpr auto font_size = 17.f;
 
 	constexpr auto window_scaling = 1.f;
 
