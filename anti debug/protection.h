@@ -85,8 +85,7 @@ inline bool debug_perms_check()
 		return FALSE;
 }
 
-void Protection_Loop()
-{
+void Protection_Loop() {
 	if (IsDebuggerPresentCustom()) std::cout << "Debugger erkannt!\n";
 	if (CheckRemoteDebugger()) std::cout << "Remote Debugger erkannt!\n";
 	if (NtQueryInfoProcess()) std::cout << "Debugger durch NtQueryInformationProcess erkannt!\n";
@@ -99,8 +98,9 @@ void Protection_Loop()
 	if (DetectINT2D()) std::cout << "INT2D Breakpoint erkannt!\n";
 	if (DetectSingleStepException()) std::cout << "SingleStep Exception erkannt!\n";
 
-	// Integrieren der neuen Funktionen
+	// Integrating new functions
 	if (DetectStackPointerManipulation()) std::cout << "Stack Pointer Manipulation erkannt!\n";
+	if (DetectMemoryDumping()) std::cout << "Möglicher Memory Dump erkannt!\n";  // Überprüfung auf Memory Dumping
 
 	// Weitere Schutzmaßnahmen
 	hide_thread(LI_FN(GetCurrentThread).forwarded_safe_cached());
@@ -110,5 +110,5 @@ void Protection_Loop()
 	if (is_debugger_present()) *(uintptr_t*)(0) = 1;
 	if (debug_perms_check()) *(uintptr_t*)(0) = 1;
 
-	std::this_thread::sleep_for(std::chrono::milliseconds(10));
+	std::this_thread::sleep_for(std::chrono::milliseconds(10));  // Schlafen für eine kurze Zeit
 }

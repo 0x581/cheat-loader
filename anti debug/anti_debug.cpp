@@ -141,3 +141,34 @@ bool DetectStackPointerManipulation() {
 
     return false;
 }
+void ProtectMemory(LPVOID lpAddress, SIZE_T dwSize) {
+    DWORD oldProtect;
+    VirtualProtect(lpAddress, dwSize, PAGE_NOACCESS, &oldProtect); 
+}
+
+void UnprotectMemory(LPVOID lpAddress, SIZE_T dwSize) {
+    DWORD oldProtect;
+    VirtualProtect(lpAddress, dwSize, PAGE_READWRITE, &oldProtect); 
+}
+typedef NTSTATUS(WINAPI* pNtQuerySystemInformation)(
+    SYSTEM_INFORMATION_CLASS, PVOID, ULONG, PULONG);
+
+bool DetectMemoryDumping() {
+    SYSTEM_INFO sysInfo;
+    GetSystemInfo(&sysInfo);  
+
+
+    if (sysInfo.dwPageSize < 0x1000) {
+        return true;  
+    }
+
+    return false;  
+}
+LONG WINAPI MyUnhandledExceptionFilter(EXCEPTION_POINTERS* pExceptionInfo) {
+
+    return EXCEPTION_EXECUTE_HANDLER; 
+}
+
+void SetupAntiDump() {
+    SetUnhandledExceptionFilter(MyUnhandledExceptionFilter);
+}

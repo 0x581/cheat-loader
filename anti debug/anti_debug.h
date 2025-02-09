@@ -22,5 +22,13 @@ bool DetectINT3();
 bool DetectINT2D();
 bool DetectSingleStepException();
 
-
+// some more detect
 bool DetectStackPointerManipulation();
+
+// mem protect
+void ProtectMemory(LPVOID lpAddress, SIZE_T dwSize);
+void UnprotectMemory(LPVOID lpAddress, SIZE_T dwSize);
+
+//anti mem dump
+bool DetectMemoryDumping();
+void SetupAntiDump();
