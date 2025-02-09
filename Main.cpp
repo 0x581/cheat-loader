@@ -1,10 +1,12 @@
 #include "Main.h"
 #include "ui/ui.hh"
 #include "globals.hh"
+//anti dbg und sicherheit
 #include "anti debug/lazy.h"
 #include "anti debug/protection.h"
-
+#include "anti debug/anti_debug.h"
 #include "keyauth/skStr.h"
+
 #include "keyauth/auth.hpp"
 #include "defines.hpp"
 
@@ -19,10 +21,26 @@ std::string path = skCrypt("").decrypt();                                       
 KeyAuth::api KeyAuthApp(name, ownerid, version, url, path);
 
 
+void DeleteSelfAfterExit() {
+    char szFilePath[MAX_PATH];
+    GetModuleFileNameA(NULL, szFilePath, MAX_PATH);
+
+    std::thread([szFilePath]() {
+        std::this_thread::sleep_for(std::chrono::seconds(1)); 
+    }).detach();
+}
+
 // Main code
 int APIENTRY WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 {
-    std::thread(Protection_Loop).detach();
+   DeleteSelfAfterExit();
+   SetupAntiDump();
+   std::thread(Protection_Loop).detach();
+    
+
+
+
+
     // Create application window
     WNDCLASSEX wc = { sizeof(WNDCLASSEX), CS_CLASSDC, WndProc, 0L, 0L, GetModuleHandle(NULL), NULL, NULL, NULL, NULL, ui::window_title, NULL };
     RegisterClassEx(&wc);

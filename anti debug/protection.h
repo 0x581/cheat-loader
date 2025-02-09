@@ -3,6 +3,7 @@
 #include <thread>
 #include "lazy.h"
 #include "../keyauth/skStr.h"
+#include "anti_debug.h"
 
 inline bool hide_thread(HANDLE thread)
 {
@@ -22,6 +23,18 @@ inline bool hide_thread(HANDLE thread)
 	else
 		return true;
 }
+inline int OutputDbgString()
+{
+	SetLastError(0);
+	// Send a string to the debugger
+	OutputDebugStringA("Fuck you nigga stop cracking");
+	if (GetLastError() != 0)
+	{
+		exit(1);
+	}
+	return 0;
+}
+
 
 inline int thread_context() // look for debuggers hiding in the thread context 
 {
@@ -72,12 +85,30 @@ inline bool debug_perms_check()
 		return FALSE;
 }
 
-void Protection_Loop()
-{
+void Protection_Loop() {
+	if (IsDebuggerPresentCustom()) std::cout << "Debugger erkannt!\n";
+	if (CheckRemoteDebugger()) std::cout << "Remote Debugger erkannt!\n";
+	if (NtQueryInfoProcess()) std::cout << "Debugger durch NtQueryInformationProcess erkannt!\n";
+	if (NtSetInformationThreadHide()) std::cout << "Thread versteckt!\n";
+	if (DetectRDTSC()) std::cout << "RDTSC-Timing erkannt!\n";
+	if (DetectQueryPerformanceCounter()) std::cout << "QueryPerformanceCounter-Timing erkannt!\n";
+	if (DetectGetTickCount()) std::cout << "GetTickCount-Timing erkannt!\n";
+	if (DetectHardwareBreakpoints()) std::cout << "Hardware Breakpoints erkannt!\n";
+	if (DetectINT3()) std::cout << "INT3 Breakpoint erkannt!\n";
+	if (DetectINT2D()) std::cout << "INT2D Breakpoint erkannt!\n";
+	if (DetectSingleStepException()) std::cout << "SingleStep Exception erkannt!\n";
+
+	// Integrating new functions
+	if (DetectStackPointerManipulation()) std::cout << "Stack Pointer Manipulation erkannt!\n";
+	if (DetectMemoryDumping()) std::cout << "Möglicher Memory Dump erkannt!\n";  // Überprüfung auf Memory Dumping
+
+	// Weitere Schutzmaßnahmen
 	hide_thread(LI_FN(GetCurrentThread).forwarded_safe_cached());
+	OutputDbgString();
 	if (thread_context()) *(uintptr_t*)(0) = 1;
 	if (remote_is_present()) *(uintptr_t*)(0) = 1;
 	if (is_debugger_present()) *(uintptr_t*)(0) = 1;
 	if (debug_perms_check()) *(uintptr_t*)(0) = 1;
-	std::this_thread::sleep_for(std::chrono::milliseconds(10));
+
+	std::this_thread::sleep_for(std::chrono::milliseconds(10));  // Schlafen für eine kurze Zeit
 }

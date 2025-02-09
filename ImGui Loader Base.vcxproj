@@ -134,6 +134,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="ui\custom_ui.cpp" />
+    <ClCompile Include="anti debug\anti_debug.cpp" />
     <ClCompile Include="ui\ui.cc" />
     <ClCompile Include="imgui\imgui.cpp" />
     <ClCompile Include="imgui\imgui_demo.cpp" />
@@ -145,6 +146,8 @@
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="anti debug\antidbg.h" />
+    <ClInclude Include="anti debug\anti_debug.h" />
     <ClInclude Include="anti debug\lazy.h" />
     <ClInclude Include="anti debug\protection.h" />
     <ClInclude Include="defines.hpp" />
@@ -167,6 +170,9 @@
   </ItemGroup>
   <ItemGroup>
     <Library Include="keyauth\library_x64.lib" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="anti debug\AntiDBG.asm" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

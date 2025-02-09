@@ -21,6 +21,7 @@
     </ClCompile>
     <ClCompile Include="main.cpp" />
     <ClCompile Include="ui\ui.cc" />
+    <ClCompile Include="anti debug\anti_debug.cpp" />
     <ClCompile Include="ui\custom_ui.cpp" />
     <ClCompile Include="imgui\imgui_tables.cpp">
       <Filter>external\imgui</Filter>
@@ -74,6 +75,10 @@
       <Filter>security</Filter>
     </ClInclude>
     <ClInclude Include="ui\custom_ui.hpp" />
+    <ClInclude Include="anti debug\lazy.h" />
+    <ClInclude Include="anti debug\protection.h" />
+    <ClInclude Include="anti debug\antidbg.h" />
+    <ClInclude Include="anti debug\anti_debug.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="external">
@@ -96,5 +101,8 @@
     <Library Include="keyauth\library_x64.lib">
       <Filter>external\keyauth</Filter>
     </Library>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="anti debug\AntiDBG.asm" />
   </ItemGroup>
 </Project>
