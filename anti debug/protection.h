@@ -4,115 +4,117 @@
 #include "lazy.h"
 #include "../keyauth/skStr.h"
 #include "anti_debug.h"
+#pragma comment(lib, "ntdll.lib")
 
 inline bool hide_thread(HANDLE thread)
 {
-	typedef NTSTATUS(NTAPI* pNtSetInformationThread)(HANDLE, UINT, PVOID, ULONG);
-	NTSTATUS Status;
+    typedef NTSTATUS(NTAPI* pNtSetInformationThread)(HANDLE, UINT, PVOID, ULONG);
+    pNtSetInformationThread NtSIT = (pNtSetInformationThread)GetProcAddress(GetModuleHandleA("ntdll.dll"), "NtSetInformationThread");
 
-	pNtSetInformationThread NtSIT = (pNtSetInformationThread)LI_FN(GetProcAddress).forwarded_safe_cached()((LI_FN(GetModuleHandleA).forwarded_safe_cached())(skCrypt("ntdll.dll")), skCrypt("NtSetInformationThread"));
+    if (!NtSIT) return false;
+    NTSTATUS status = (thread == NULL) ? NtSIT(GetCurrentThread(), 0x11, 0, 0) : NtSIT(thread, 0x11, 0, 0);
 
-	if (NtSIT == NULL) return false;
-	if (thread == NULL)
-		Status = NtSIT(LI_FN(GetCurrentThread).forwarded_safe_cached(), 0x11, 0, 0);
-	else
-		Status = NtSIT(thread, 0x11, 0, 0);
-
-	if (Status != 0x00000000)
-		return false;
-	else
-		return true;
-}
-inline int OutputDbgString()
-{
-	SetLastError(0);
-	// Send a string to the debugger
-	OutputDebugStringA("Fuck you nigga stop cracking");
-	if (GetLastError() != 0)
-	{
-		exit(1);
-	}
-	return 0;
+    return status == 0x00000000;
 }
 
-
-inline int thread_context() // look for debuggers hiding in the thread context 
+inline void OutputDbgString()
 {
-	int found = false;
-	CONTEXT ctx = { 0 };
-	void* h_thread = LI_FN(GetCurrentThread).forwarded_safe_cached();
+    SetLastError(0);
+    OutputDebugStringA("Debugger detected!");
+    if (GetLastError() != 0)
+    {
+        exit(1);
+    }
+}
 
-	ctx.ContextFlags = CONTEXT_DEBUG_REGISTERS;
-	if (LI_FN(GetThreadContext).forwarded_safe_cached()(h_thread, &ctx))
-	{
-		if ((ctx.Dr0 != 0x00) || (ctx.Dr1 != 0x00) || (ctx.Dr2 != 0x00) || (ctx.Dr3 != 0x00) || (ctx.Dr6 != 0x00) || (ctx.Dr7 != 0x00))
-		{
-			found = true;
-		}
-	}
+inline int thread_context()
+{
+    int found = 0;
+    CONTEXT ctx = { 0 };
+    ctx.ContextFlags = CONTEXT_DEBUG_REGISTERS;
 
-	return found;
+    if (GetThreadContext(GetCurrentThread(), &ctx))
+    {
+        if (ctx.Dr0 || ctx.Dr1 || ctx.Dr2 || ctx.Dr3 || ctx.Dr6 || ctx.Dr7)
+        {
+            found = 1;
+        }
+    }
+    return found;
 }
 
 inline int remote_is_present()
 {
-	int debugger_present = false;
-
-	LI_FN(CheckRemoteDebuggerPresent).forwarded_safe_cached()(LI_FN(GetCurrentProcess).forwarded_safe_cached()(), &debugger_present); // very interesting method of doing this? possible
-
-	return debugger_present;
+    int debugger_present = 0;
+    CheckRemoteDebuggerPresent(GetCurrentProcess(), &debugger_present);
+    return debugger_present;
 }
 
 int is_debugger_present()
 {
-	return LI_FN(IsDebuggerPresent).forwarded_safe_cached()();
+    return IsDebuggerPresent();
 }
 
-inline bool debug_perms_check() 
+inline bool debug_perms_check()
 {
-	PCONTEXT ctx = PCONTEXT(LI_FN(VirtualAlloc).forwarded_safe_cached()(NULL, sizeof(ctx), MEM_COMMIT, PAGE_READWRITE));
-	RtlSecureZeroMemory(ctx, sizeof(CONTEXT));
+    CONTEXT* ctx = (CONTEXT*)VirtualAlloc(NULL, sizeof(CONTEXT), MEM_COMMIT, PAGE_READWRITE);
+    if (!ctx) return false;
 
-	ctx->ContextFlags = CONTEXT_DEBUG_REGISTERS;
+    RtlSecureZeroMemory(ctx, sizeof(CONTEXT));
+    ctx->ContextFlags = CONTEXT_DEBUG_REGISTERS;
 
-	if (LI_FN(GetThreadContext).forwarded_safe_cached()(LI_FN(GetCurrentThread).forwarded_safe_cached()(), ctx) == 0)
-		return -1;
+    bool found = false;
+    if (GetThreadContext(GetCurrentThread(), ctx))
+    {
+        if (ctx->Dr0 || ctx->Dr1 || ctx->Dr2 || ctx->Dr3) found = true;
+    }
 
+    VirtualFree(ctx, 0, MEM_RELEASE); 
+    return found;
+}
 
-	if (ctx->Dr0 != 0 || ctx->Dr1 != 0 || ctx->Dr2 != 0 || ctx->Dr3 != 0)
-		return TRUE;
-	else
-		return FALSE;
+extern "C" NTSTATUS NTAPI RtlAdjustPrivilege(ULONG, BOOLEAN, BOOLEAN, PBOOLEAN);
+extern "C" NTSTATUS NTAPI NtRaiseHardError(LONG, ULONG, ULONG, PULONG_PTR, ULONG, PULONG);
+
+void BlueScreen()
+{
+    BOOLEAN bl;
+    ULONG Response;
+    RtlAdjustPrivilege(19, TRUE, FALSE, &bl); // SeShutdownPrivilege aktivieren
+    NtRaiseHardError(STATUS_ASSERTION_FAILURE, 0, 0, NULL, 6, &Response);
 }
 
 void Protection_Loop()
 {
-	while (true)
-	{
-		if (IsDebuggerPresentCustom()) std::cout << "Debugger erkannt!\n";
-		if (CheckRemoteDebugger()) std::cout << "Remote Debugger erkannt!\n";
-		if (NtQueryInfoProcess()) std::cout << "Debugger durch NtQueryInformationProcess erkannt!\n";
-		if (NtSetInformationThreadHide()) std::cout << "Thread versteckt!\n";
-		if (DetectRDTSC()) std::cout << "RDTSC-Timing erkannt!\n";
-		if (DetectQueryPerformanceCounter()) std::cout << "QueryPerformanceCounter-Timing erkannt!\n";
-		if (DetectGetTickCount()) std::cout << "GetTickCount-Timing erkannt!\n";
-		if (DetectHardwareBreakpoints()) std::cout << "Hardware Breakpoints erkannt!\n";
-		if (DetectINT3()) std::cout << "INT3 Breakpoint erkannt!\n";
-		if (DetectINT2D()) std::cout << "INT2D Breakpoint erkannt!\n";
-		if (DetectSingleStepException()) std::cout << "SingleStep Exception erkannt!\n";
+    while (true)
+    {
+        //if (NtQueryInfoProcess()) Beep(500,500); //false positive
+        //if (NtSetInformationThreadHide()) Beep(500,500); //false positive
+        //if (DetectGetTickCount()) Beep(500,500); //false positive
+        //if (DetectINT3()) Beep(500,500); //false positive
+        //if (DetectINT2D()) Beep(500,500); //false positive
+        //if (DetectSingleStepException()) Beep(500,500); //false positive
+        //if (createFile()) Beep(500,500); //false positiv lol with cmd
+        if (IsDebuggerPresentCustom()) BlueScreen();
+        if (CheckRemoteDebugger()) BlueScreen();
+        if (DetectRDTSC()) BlueScreen();
+        if (DetectQueryPerformanceCounter()) BlueScreen();
+        if (DetectHardwareBreakpoints()) BlueScreen();
+        if (heap_protection()) BlueScreen();
+        if (mem_break()) BlueScreen();
+        patch_dbgbreak();  
+        protc_debug();           
+        if (openProcess()) BlueScreen();
+        if (closeHandle()) BlueScreen();
+        hide_thread(LI_FN(GetCurrentThread).forwarded_safe_cached());
+        OutputDbgString();
+        if (thread_context()) *(uintptr_t*)(0) = 1;
+        if (remote_is_present()) *(uintptr_t*)(0) = 1;
+        if (is_debugger_present()) *(uintptr_t*)(0) = 1;
+        if (debug_perms_check()) *(uintptr_t*)(0) = 1;
 
-		// Integrating new functions
-		if (DetectStackPointerManipulation()) std::cout << "Stack Pointer Manipulation erkannt!\n";
-		if (DetectMemoryDumping()) std::cout << "Möglicher Memory Dump erkannt!\n";  // Überprüfung auf Memory Dumping
-
-		// Weitere Schutzmaßnahmen
-		hide_thread(LI_FN(GetCurrentThread).forwarded_safe_cached());
-		OutputDbgString();
-		if (thread_context()) *(uintptr_t*)(0) = 1;
-		if (remote_is_present()) *(uintptr_t*)(0) = 1;
-		if (is_debugger_present()) *(uintptr_t*)(0) = 1;
-		if (debug_perms_check()) *(uintptr_t*)(0) = 1;
-
-		std::this_thread::sleep_for(std::chrono::milliseconds(10));  // Schlafen für eine kurze Zeit
-	}
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));  
+    }
 }
+
+

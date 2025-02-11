@@ -28,6 +28,15 @@ bool DetectStackPointerManipulation();
 // mem protect
 void ProtectMemory(LPVOID lpAddress, SIZE_T dwSize);
 void UnprotectMemory(LPVOID lpAddress, SIZE_T dwSize);
+bool heap_protection();
+bool mem_break();
+void patch_dbgbreak();
+void protc_debug();
+
+//misc
+bool openProcess();
+bool createFile();
+bool closeHandle();
 
 //anti mem dump
 bool DetectMemoryDumping();

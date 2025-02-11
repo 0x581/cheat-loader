@@ -99,6 +99,42 @@ bool DetectINT3() {
     }
 }
 
+bool mem_break()
+{
+    DWORD dwOldProtect = 0;
+    SYSTEM_INFO SysInfo = { 0 };
+
+    GetSystemInfo(&SysInfo);
+    PVOID pPage = VirtualAlloc(NULL, SysInfo.dwPageSize, MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
+    if (NULL == pPage)
+        return false;
+
+    PBYTE pMem = (PBYTE)pPage;
+    *pMem = 0xC3;  
+
+   
+    if (!VirtualProtect(pPage, SysInfo.dwPageSize, PAGE_EXECUTE_READWRITE | PAGE_GUARD, &dwOldProtect))
+    {
+        VirtualFree(pPage, NULL, MEM_RELEASE);
+        return false;
+    }
+
+    bool detected = false;
+    __try
+    {
+        auto func = reinterpret_cast<void(*)()>(pPage);
+        func(); 
+    }
+    __except (EXCEPTION_EXECUTE_HANDLER)
+    {
+        detected = false;
+    }
+
+    VirtualFree(pPage, NULL, MEM_RELEASE);
+    return detected;
+}
+
+
 bool DetectINT2D() {
     __try {
         RaiseException(0x2D, 0, 0, NULL);
@@ -108,7 +144,92 @@ bool DetectINT2D() {
         return true;
     }
 }
+typedef DWORD(WINAPI* TCsrGetProcessId)(VOID);
 
+bool openProcess()
+{
+    HMODULE hNtdll = LoadLibraryA("ntdll.dll");
+    if (!hNtdll)
+        return false;
+
+    TCsrGetProcessId pfnCsrGetProcessId = (TCsrGetProcessId)GetProcAddress(hNtdll, "CsrGetProcessId");
+    if (!pfnCsrGetProcessId)
+        return false;
+
+    HANDLE hCsr = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pfnCsrGetProcessId());
+    if (hCsr != NULL)
+    {
+        CloseHandle(hCsr);
+        return true;
+    }
+    else
+        return false;
+}
+bool closeHandle()
+{
+    __try
+    {
+        CloseHandle((HANDLE)0xDEADBEEF);
+        return false;
+    }
+    __except (EXCEPTION_INVALID_HANDLE == GetExceptionCode()
+        ? EXCEPTION_EXECUTE_HANDLER
+        : EXCEPTION_CONTINUE_SEARCH)
+    {
+        return true;
+    }
+}
+bool heap_protection()
+{
+    PROCESS_HEAP_ENTRY HeapEntry = { 0 };
+    do
+    {
+        if (!HeapWalk(GetProcessHeap(), &HeapEntry))
+            return false;
+    } while (HeapEntry.wFlags != PROCESS_HEAP_ENTRY_BUSY);
+
+    PVOID pOverlapped = (PBYTE)HeapEntry.lpData + HeapEntry.cbData;
+    return ((DWORD)(*(PDWORD)pOverlapped) == 0xABABABAB);
+}
+bool createFile()
+{
+    CHAR szFileName[MAX_PATH];
+    if (0 == GetModuleFileNameA(NULL, szFileName, sizeof(szFileName)))
+        return false;
+
+    return INVALID_HANDLE_VALUE == CreateFileA(szFileName, GENERIC_READ, 0, NULL, OPEN_EXISTING, 0, 0);
+}
+void protc_debug()
+{
+#ifndef _WIN64
+    // 32-Bit-Architektur
+    PPEB pPeb = (PPEB)__readfsdword(0x30);
+    *(PDWORD)((PBYTE)pPeb + 0x68) = 0;
+#else
+    // 64-Bit-Architektur
+    PPEB pPeb = (PPEB)__readgsqword(0x60);
+    *(PDWORD)((PBYTE)pPeb + 0xBC) = 0;
+#endif // _WIN64
+
+    // Entfernen der Debuggerkennung
+    pPeb->BeingDebugged = 0;
+}
+void patch_dbgbreak()
+{
+    HMODULE hNtdll = GetModuleHandleA("ntdll.dll");
+    if (!hNtdll)
+        return;
+
+    FARPROC pDbgBreakPoint = GetProcAddress(hNtdll, "DbgBreakPoint");
+    if (!pDbgBreakPoint)
+        return;
+
+    DWORD dwOldProtect;
+    if (!VirtualProtect(pDbgBreakPoint, 1, PAGE_EXECUTE_READWRITE, &dwOldProtect))
+        return;
+
+    *(PBYTE)pDbgBreakPoint = (BYTE)0xC3; // ret
+}
 bool DetectSingleStepException() {
     __try {
         CONTEXT ctx = { 0 };
