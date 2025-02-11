@@ -91,7 +91,7 @@ int APIENTRY WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     //ImFont* font = io.Fonts->AddFontFromFileTTF("c:\\Windows\\Fonts\\ArialUni.ttf", 18.0f, NULL, io.Fonts->GetGlyphRangesJapanese());
     //IM_ASSERT(font != NULL);
 
-    io.FontDefault = io.Fonts->AddFontFromFileTTF(UIDefines::font_path, UIDefines::font_size * UIDefines::window_scaling);
+    io.FontDefault = io.Fonts->AddFontFromFileTTF(UIDefines::font_path, UIDefines::font_size);
 
     // Main loop
     MSG msg;
