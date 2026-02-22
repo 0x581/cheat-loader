@@ -1,12 +1,26 @@
 #include "ui.hh"
 
 #include <thread>
+#include <cmath>
 
 #include "imgui_internal.h"
 #include "custom_ui.hpp"
 
 #include "globals.hh"
 #include "utils.hpp"
+#include "crypto/crypto.hpp"
+
+// Get directory where the .exe is located
+static std::string GetExeDirectory()
+{
+    char path[MAX_PATH];
+    GetModuleFileNameA(NULL, path, MAX_PATH);
+    std::string fullPath(path);
+    size_t lastSlash = fullPath.find_last_of("\\/");
+    if (lastSlash != std::string::npos)
+        return fullPath.substr(0, lastSlash + 1);
+    return "";
+}
 
 static void TextCentered(const char *text, ImVec2 position)
 {
@@ -89,10 +103,10 @@ void ui::renderMain(KeyAuth::api &KeyAuthApp)
          * Do NOT remove this checkAuthenticated() function.
          * It protects you from cracking, it would be NOT be a good idea to remove it
          */
-        // std::thread run(checkAuthenticated, KeyAuthApp.ownerid);
+        std::thread run(checkAuthenticated, KeyAuthApp.ownerid);
 
         // do NOT remove checkAuthenticated(), it MUST stay for security reasons
-        // std::thread check(sessionStatus, std::ref(KeyAuthApp)); // do NOT remove this function either.
+        std::thread check(sessionStatus, std::ref(KeyAuthApp)); // do NOT remove this function either.
 
         check_started = true;
     }
@@ -103,7 +117,7 @@ void ui::renderMain(KeyAuth::api &KeyAuthApp)
 
     globals.products[0] = ProductInfo{
         .valid = true,
-        .name = "CounterStrike 2",
+        .name = "cs2",
         .status = undetected,
         .version = "0.1.0",
         .last_update = "05.02.2025",
@@ -260,10 +274,96 @@ void ui::renderMain(KeyAuth::api &KeyAuthApp)
     delete[] items;
 }
 
+// Launch executable using CreateProcess
+static bool LaunchExecutable(const std::string &exePath)
+{
+    STARTUPINFOA si = {sizeof(si)};
+    PROCESS_INFORMATION pi = {0};
+
+    // Create the process
+    if (!CreateProcessA(
+            exePath.c_str(), // Application path
+            NULL,            // Command line
+            NULL,            // Process security attributes
+            NULL,            // Thread security attributes
+            FALSE,           // Inherit handles
+            0,               // Creation flags
+            NULL,            // Environment
+            NULL,            // Current directory
+            &si,             // Startup info
+            &pi))            // Process info
+    {
+        return false;
+    }
+
+    // Close handles (process continues running independently)
+    CloseHandle(pi.hThread);
+    CloseHandle(pi.hProcess);
+
+    return true;
+}
+
 void ui::renderLoadingProduct(KeyAuth::api &KeyAuthApp)
 {
-    globals.form_state = failed;
-    globals.error_message = "renderLoadingProduct not implemented";
+    // Loading spinner animation
+    static float rotation = 0.0f;
+    rotation += ImGui::GetIO().DeltaTime * 5.0f;
+    if (rotation > 6.28318f)
+        rotation -= 6.28318f;
+
+    ImVec2 center = ImVec2(window_size.x / 2.f, window_size.y / 2.f - 30.f);
+
+    // Draw loading text
+    const char *loadingText = "Loading product...";
+    TextCentered(loadingText, center);
+
+    // Draw product name below
+    ProductInfo &product = globals.products[globals.final_selected_product];
+    if (product.valid)
+    {
+        ImVec2 productNamePos = ImVec2(window_size.x / 2.f, window_size.y / 2.f + 10.f);
+        TextCentered(product.name.c_str(), productNamePos);
+    }
+
+    // Simple spinner dots
+    ImVec2 spinnerCenter = ImVec2(window_size.x / 2.f, window_size.y / 2.f + 50.f);
+    ImDrawList *draw_list = ImGui::GetWindowDrawList();
+    ImVec2 windowPos = ImGui::GetWindowPos();
+
+    for (int i = 0; i < 8; i++)
+    {
+        float angle = rotation + (i * 0.785398f); // 45 degrees apart
+        float alpha = 1.0f - (i * 0.1f);
+        ImVec2 dotPos = ImVec2(
+            windowPos.x + spinnerCenter.x + cosf(angle) * 15.f,
+            windowPos.y + spinnerCenter.y + sinf(angle) * 15.f);
+        draw_list->AddCircleFilled(dotPos, 3.f, ImColor(1.f, 1.f, 1.f, alpha));
+    }
+
+    // Launch the encrypted product executable (only once per product selection)
+    static bool launchAttempted = false;
+
+    if (!launchAttempted)
+    {
+        launchAttempted = true;
+
+        // Build path to encrypted executable (.enc file) - relative to exe location
+        std::string encryptedPath = GetExeDirectory() + "products\\" + product.name + ".enc";
+
+        // Decrypt and execute
+        std::string error = Crypto::DecryptAndExecuteWithError(encryptedPath);
+
+        if (error.empty())
+        {
+            globals.form_state = loaded_product;
+        }
+        else
+        {
+            globals.error_message = error;
+            globals.form_state = failed;
+            launchAttempted = false; // Allow retry on failure
+        }
+    }
 }
 
 void ui::renderError(KeyAuth::api &KeyAuthApp)
@@ -305,6 +405,10 @@ void ui::render(KeyAuth::api &KeyAuthApp)
         break;
     case loading_product:
         renderLoadingProduct(KeyAuthApp);
+        break;
+    case loaded_product:
+        // Product loaded successfully - show success or close
+        TextCentered("Product loaded!", ImVec2(window_size.x / 2.f, window_size.y / 2.f));
         break;
     }
 

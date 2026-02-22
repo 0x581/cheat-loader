@@ -78,6 +78,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${CMAKE_CURRENT_SOURCE_DIR}/src
     ${CMAKE_CURRENT_SOURCE_DIR}/src/ui
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/crypto
     ${CMAKE_CURRENT_SOURCE_DIR}/import
     ${CMAKE_CURRENT_SOURCE_DIR}/import/lib/imgui
     ${CMAKE_CURRENT_SOURCE_DIR}/import/lib/keyauth
@@ -152,4 +153,10 @@ add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory
         ${CMAKE_SOURCE_DIR}/import/lib/fonts
         $<TARGET_FILE_DIR:${PROJECT_NAME}>/fonts
+)
+
+# Encryptor Tool
+add_executable(Encryptor tools/Encryptor.cpp)
+set_target_properties(Encryptor PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
 )

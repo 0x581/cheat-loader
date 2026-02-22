@@ -10,7 +10,7 @@
             "name": "windows-base",
             "hidden": true,
             "generator": "Visual Studio 17 2022",
-            "binaryDir": "${sourceDir}/build/${presetName}",
+            "binaryDir": "${sourceDir}/build",
             "toolset": {
                 "value": "v143,host=x64,version=14.43"
             },
