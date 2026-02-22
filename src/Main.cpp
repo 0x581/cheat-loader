@@ -10,6 +10,9 @@
 #include "auth.hpp"
 #include "defines.hpp"
 
+// Set to true to disable KeyAuth check for testing
+#define DISABLE_KEYAUTH_CHECK true
+
 std::string name = skCrypt("cs2").decrypt();                                                                // App name
 std::string ownerid = skCrypt("oE4g8i1Vq4").decrypt();                                                      // Account ID
 std::string secret = skCrypt("8fd8b7aade64ce87387132e9f56908a824d9ceeb525a1dbe97999767e4bf02ed").decrypt(); // Application secret (not used in latest C++ example)
@@ -111,12 +114,17 @@ int APIENTRY WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
             {
                 ui::init(g_pd3dDevice);
 
+#if !DISABLE_KEYAUTH_CHECK
                 KeyAuthApp.init();
                 if (!KeyAuthApp.response.success)
                 {
                     globals.error_message = KeyAuthApp.response.message;
                     globals.form_state = failed;
                 }
+#else
+                // KeyAuth disabled for testing - skip directly to main
+                globals.form_state = main;
+#endif
 
                 init = true;
             }

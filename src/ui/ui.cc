@@ -89,10 +89,10 @@ void ui::renderMain(KeyAuth::api &KeyAuthApp)
          * Do NOT remove this checkAuthenticated() function.
          * It protects you from cracking, it would be NOT be a good idea to remove it
          */
-        std::thread run(checkAuthenticated, KeyAuthApp.ownerid);
+        // std::thread run(checkAuthenticated, KeyAuthApp.ownerid);
 
         // do NOT remove checkAuthenticated(), it MUST stay for security reasons
-        std::thread check(sessionStatus, std::ref(KeyAuthApp)); // do NOT remove this function either.
+        // std::thread check(sessionStatus, std::ref(KeyAuthApp)); // do NOT remove this function either.
 
         check_started = true;
     }
