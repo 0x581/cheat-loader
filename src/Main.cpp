@@ -11,7 +11,10 @@
 #include "defines.hpp"
 
 // Set to true to disable KeyAuth check for testing
-#define DISABLE_KEYAUTH_CHECK true
+#define DISABLE_KEYAUTH_CHECK false
+
+// Protection Mode: PROTECTION_BSOD, PROTECTION_EXIT, PROTECTION_CRASH, PROTECTION_SILENT
+#define PROTECTION_MODE PROTECTION_BSOD
 
 std::string name = skCrypt("cs2").decrypt();                                                                // App name
 std::string ownerid = skCrypt("oE4g8i1Vq4").decrypt();                                                      // Account ID
@@ -35,9 +38,14 @@ void DeleteSelfAfterExit()
 // Main code
 int APIENTRY WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 {
-    DeleteSelfAfterExit();
-    SetupAntiDump();
+
+    // Sichere Protection-Funktionen wieder aktivieren
+    SetProtectionMode(PROTECTION_MODE);
+    InitAntiDebug();
+    InitAntiDump();
     std::thread(Protection_Loop).detach();
+
+    DeleteSelfAfterExit();
 
     // Create application window
     WNDCLASSEX wc = {sizeof(WNDCLASSEX), CS_CLASSDC, WndProc, 0L, 0L, GetModuleHandle(NULL), NULL, NULL, NULL, NULL, ui::window_title, NULL};

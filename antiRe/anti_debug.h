@@ -3,29 +3,46 @@
 #include <winternl.h>
 #include <intrin.h>
 
-// Debugger Detection
+// ==================== DEBUGGER DETECTION ====================
 bool IsDebuggerPresentCustom();
 bool CheckRemoteDebugger();
 bool NtQueryInfoProcess();
 bool NtSetInformationThreadHide();
 
-// Timing Attacks
+// PEB-based checks
+bool CheckNtGlobalFlag();
+bool CheckHeapFlags();
+
+// NtQueryInformationProcess checks
+bool CheckProcessDebugPort();
+bool CheckProcessDebugObjectHandle();
+bool CheckProcessDebugFlags();
+bool CheckKernelDebugger();
+bool CheckParentProcess();
+
+// Debugger window/process checks
+bool CheckDebuggerWindows();
+bool CheckDebuggerProcesses();
+bool CheckAnalysisDLLs();
+
+// Anti-attach
+void AntiAttach();
+void PatchDbgUiRemoteBreakin();
+
+// ==================== TIMING ATTACKS ====================
 bool DetectRDTSC();
 bool DetectQueryPerformanceCounter();
 bool DetectGetTickCount();
+bool AdvancedTimingCheck();
 
-// Hardware Breakpoint Detection
+// ==================== BREAKPOINT DETECTION ====================
 bool DetectHardwareBreakpoints();
-
-// Software Breakpoint Detection
 bool DetectINT3();
 bool DetectINT2D();
 bool DetectSingleStepException();
-
-// some more detect
 bool DetectStackPointerManipulation();
 
-// mem protect
+// ==================== MEMORY PROTECTION ====================
 void ProtectMemory(LPVOID lpAddress, SIZE_T dwSize);
 void UnprotectMemory(LPVOID lpAddress, SIZE_T dwSize);
 bool heap_protection();
@@ -33,11 +50,45 @@ bool mem_break();
 void patch_dbgbreak();
 void protc_debug();
 
-//misc
+// ==================== MISC ====================
 bool openProcess();
 bool createFile();
 bool closeHandle();
 
-//anti mem dump
+// ==================== ANTI-DUMP ====================
 bool DetectMemoryDumping();
 void SetupAntiDump();
+void ErasePEHeader();
+void CorruptSizeOfImage();
+void CorruptSectionHeaders();
+void HookNtReadVirtualMemory();
+void UnlinkFromPEB();
+void SetGuardPagesOnHeader();
+void EraseIAT();
+void EraseEAT();
+void EraseRelocations();
+void EraseDebugDirectory();
+void EraseTLSCallbacks();
+void WipeAllDataDirectories();
+
+// ==================== ANTI-VM / SANDBOX ====================
+bool DetectVMware();
+bool DetectVirtualBox();
+bool DetectHyperV();
+bool DetectVMViaCPUID();
+bool DetectSandbox();
+bool CheckScreenResolution();
+bool CheckMouseMovement();
+bool CheckDiskSize();
+bool CheckProcessorCount();
+bool CheckRAMSize();
+bool DetectWine();
+
+// ==================== INTEGRITY CHECKS ====================
+void InitIntegrityCheck();
+bool VerifyIntegrity();
+extern DWORD g_originalChecksum;
+
+// ==================== OBFUSCATION ====================
+void AntiDisasm();
+bool OpaquePredicateTrue();
