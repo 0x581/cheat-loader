@@ -362,3 +362,9 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+
+# Loader products & payloads (do not commit binaries or encrypted payloads)
+products/*.enc
+products/*.exe
+!products/.gitkeep
+*.enc

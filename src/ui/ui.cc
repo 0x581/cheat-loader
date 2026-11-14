@@ -198,14 +198,14 @@ void ui::renderMain(KeyAuth::api &KeyAuthApp)
     ImGui::Text(selectedProduct.name.c_str());
 
     ImGui::SetCursorPos(box_pos + ImVec2(padding, box_size.y * 0.333333f));
-    if (ImGui::Button(skCrypt("LOAD"), ImVec2(box_size.x - 2.f * padding, box_size.y * 0.2)))
+    if (ImGui::Button(skCrypt("LOAD"), ImVec2(box_size.x - 2.f * padding, box_size.y * 0.2f)))
     {
         globals.final_selected_product = globals.selectedProduct;
         globals.form_state = loading_product;
     }
 
     ImGui::SetCursorPos(box_pos + ImVec2(padding, box_size.y * 0.633333f));
-    if (ImGui::Button(skCrypt("EXIT"), ImVec2(box_size.x - 2.f * padding, box_size.y * 0.2)))
+    if (ImGui::Button(skCrypt("EXIT"), ImVec2(box_size.x - 2.f * padding, box_size.y * 0.2f)))
     {
         exit(1337);
     }
