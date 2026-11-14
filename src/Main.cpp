@@ -14,11 +14,11 @@
 #define DISABLE_KEYAUTH_CHECK false
 
 // Protection Mode: PROTECTION_BSOD, PROTECTION_EXIT, PROTECTION_CRASH, PROTECTION_SILENT
-#define PROTECTION_MODE PROTECTION_BSOD
+#define PROTECTION_MODE PROTECTION_EXIT
 
-std::string name = skCrypt("cs2").decrypt();                                                                // App name
-std::string ownerid = skCrypt("oE4g8i1Vq4").decrypt();                                                      // Account ID
-std::string secret = skCrypt("8fd8b7aade64ce87387132e9f56908a824d9ceeb525a1dbe97999767e4bf02ed").decrypt(); // Application secret (not used in latest C++ example)
+std::string name = skCrypt("YOUR_APP_NAME").decrypt();                                                      // KeyAuth App name
+std::string ownerid = skCrypt("YOUR_OWNER_ID").decrypt();                                                  // KeyAuth Account / Owner ID
+std::string secret = skCrypt("YOUR_APP_SECRET").decrypt();                                               // KeyAuth Application Secret
 std::string version = skCrypt("1.0").decrypt();                                                             // Application version. Used for automatic downloads see video here https://www.youtube.com/watch?v=kW195PLCBKs
 std::string url = skCrypt("https://keyauth.win/api/1.3/").decrypt();                                        // change if using KeyAuth custom domains feature
 std::string path = skCrypt("").decrypt();                                                                   // (OPTIONAL) see tutorial here https://www.youtube.com/watch?v=I9rxt821gMk&t=1s
